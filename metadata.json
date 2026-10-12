@@ -1,0 +1,6 @@
+{
+  "name": "Rakib Electrical Calculator",
+  "description": "বাসাবাড়ির ওয়্যারিং, লোড ক্যালকুলেশন, তারের সাইজ, ব্রেকার নির্বাচন, মালামালের হিসাব ও বিলিংয়ের পূর্ণাঙ্গ আধুনিক ইলেকট্রিক্যাল ক্যালকুলেটর।",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
