@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
 import { AppState, Customer, Project, Room } from './types';
 import { getInitialState, saveStateToStorage, recalculateProject, recalculateRoom } from './utils/storage';
 import { Navbar } from './components/Navbar';
@@ -29,6 +30,9 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Exit confirmation modal state for Android Back Button
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
+
   // Theme state
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     return state.settings.theme === 'dark';
@@ -40,6 +44,23 @@ export default function App() {
 
   // APK & Phone Install Guide Modal state
   const [apkModalOpen, setApkModalOpen] = useState(false);
+
+  // Android Hardware Back Button Handler with Exit Dialog
+  useEffect(() => {
+    const handleBackButton = CapacitorApp.addListener('backButton', () => {
+      if (currentTab !== 'dashboard') {
+        // If not on home/dashboard, go back to dashboard
+        setCurrentTab('dashboard');
+      } else {
+        // If already on dashboard, show exit confirmation popup
+        setExitConfirmOpen(true);
+      }
+    });
+
+    return () => {
+      handleBackButton.then(subscriber => subscriber.remove());
+    };
+  }, [currentTab]);
 
   // Sync theme with DOM
   useEffect(() => {
@@ -346,6 +367,35 @@ export default function App() {
         onAddRoom={handleAddRoom}
         onNavigateTo={setCurrentTab}
       />
+
+      {/* Exit Confirmation Modal (Yes / No) */}
+      {exitConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+              অ্যাপ থেকে প্রস্থান
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              আপনি কি সত্যিই অ্যাপস থেকে বের হতে চান?
+            </p>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setExitConfirmOpen(false)}
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-xs transition-all"
+              >
+                না
+              </button>
+              <button
+                onClick={() => CapacitorApp.exitApp()}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md transition-all"
+              >
+                হ্যাঁ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
