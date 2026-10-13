@@ -59,53 +59,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-amber-950 p-5 sm:p-7 text-white shadow-xl border border-amber-500/20">
-        <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-semibold mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>প্রফেশনাল ইলেকট্রিক্যাল ম্যানেজমেন্ট স্যুট</span>
-          </div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-white mb-2">
-            স্বাগতম, {state.settings.electricianName || 'রাকিব হাসান'}!
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            বাসাবাড়ির ওয়্যারিং, নির্ভুল লোড ক্যালকুলেশন, কপার কেবল সাইজ ও ব্রেকার নির্বাচন, মালামালের ক্রয়মূল্য এবং কাস্টমারের নিখুঁত বিল তৈরির সম্পূর্ণ সমাধান।
-          </p>
-
-          {/* Quick Action Shortcuts */}
-          <div className="flex flex-wrap items-center gap-2.5 mt-5">
-            <button
-              onClick={() => onOpenQuickAction('customer')}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-bold text-xs shadow-md transition-all"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>নতুন কাস্টমার</span>
-            </button>
-            <button
-              onClick={() => onOpenQuickAction('project')}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 active:scale-95 text-white font-bold text-xs shadow transition-all"
-            >
-              <Building2 className="w-4 h-4 text-amber-400" />
-              <span>নতুন প্রজেক্ট</span>
-            </button>
-            <button
-              onClick={() => onOpenQuickAction('room')}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 active:scale-95 text-white font-bold text-xs shadow transition-all"
-            >
-              <DoorOpen className="w-4 h-4 text-amber-400" />
-              <span>নতুন রুম</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Decorative background glow */}
-        <div className="absolute right-0 top-0 bottom-0 w-80 bg-gradient-to-l from-amber-500/15 via-transparent to-transparent pointer-events-none" />
-      </div>
-
-      {/* Top Primary Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
         {/* Total Customers */}
         <div 
