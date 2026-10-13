@@ -12,7 +12,9 @@ import {
   Sun,
   UserCheck,
   ShieldCheck,
-  Info
+  Info,
+  Zap,
+  Cable
 } from 'lucide-react';
 import { AppState, AppSettings } from '../types';
 import { exportDataAsJSON, importDataFromJSON, saveStateToStorage } from '../utils/storage';
@@ -67,7 +69,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       }
     };
     reader.readAsText(file);
-    // Reset input
     e.target.value = '';
   };
 
@@ -126,10 +127,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <Settings className="w-5 h-5 text-amber-500" />
-          <span>সেটিংস ও ডেটা ব্যাকআপ (Settings & Backup)</span>
+          <span>সেটিংস ও ওয়্যারিং ক্যালকুলেশন গাইড</span>
         </h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          আপনার ব্যবসার নাম, বিলিং হেডার, ডিফল্ট ভোল্টেজ এবং অফলাইন ডেটা সংরক্ষণ ও পুনরুদ্ধার
+          আপনার প্রফেশনাল প্রোফাইল, ডিভাইস ওয়াট স্ট্যান্ডার্ড এবং অফলাইন ডেটা সংরক্ষণ ও পুনরুদ্ধার
         </p>
       </div>
 
@@ -362,6 +363,52 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         </div>
 
+      </div>
+
+      {/* SECRET & PROFESSIONAL WIRING / WATT CALCULATION GUIDE SECTION */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-amber-400/50 p-5 shadow-sm space-y-4">
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+          <Zap className="w-4 h-4 text-amber-500" />
+          <span>গোপন গাইড: স্ট্যান্ডার্ড ডিভাইস ওয়াট ও তারের সাইজ (Rm / mm²) চার্ট</span>
+        </h2>
+
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          রুম বা প্রজেক্টে হিসাব করার সময় কোন অ্যাপ্লায়েন্সে কত ওয়াট ধরা হয় এবং কত অ্যাম্পিয়ারে কোন তার লাগবে তার প্রফেশনাল স্ট্যান্ডার্ড চার্ট:
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          
+          {/* Default Watts Table */}
+          <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+            <div className="bg-slate-100 dark:bg-slate-800 p-2.5 font-bold text-slate-700 dark:text-slate-300">
+              ডিভাইস ওয়াট স্ট্যান্ডার্ড তালিকা
+            </div>
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="p-2.5 flex justify-between"><span>সিলিং ফ্যান / টেবিল ফ্যান</span><strong className="text-amber-600">৭৫ W</strong></div>
+              <div className="p-2.5 flex justify-between"><span>LED লাইট / টিউব লাইট</span><strong className="text-amber-600">১৫ - ২০ W</strong></div>
+              <div className="p-2.5 flex justify-between"><span>এলইডি টিভি (LED TV)</span><strong className="text-amber-600">১০০ - ১২০ W</strong></div>
+              <div className="p-2.5 flex justify-between"><span>রেফ্রিজারেটর / ফ্রিজ</span><strong className="text-amber-600">২০০ - ২৫০ W</strong></div>
+              <div className="p-2.5 flex justify-between"><span>এয়ার কন্ডিশনার (১ টন / ১.৫ টন / ২ টন)</span><strong className="text-amber-600">১২০০ - ২৪০০ W</strong></div>
+              <div className="p-2.5 flex justify-between"><span>পানির মোটর (১ হর্সপাওয়ার)</span><strong className="text-amber-600">৭৪৬ W</strong></div>
+            </div>
+          </div>
+
+          {/* Wire & Breaker Guide Table */}
+          <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+            <div className="bg-slate-100 dark:bg-slate-800 p-2.5 font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <Cable className="w-3.5 h-3.5 text-blue-500" />
+              <span>তারের সাইজ (Rm / mm²) ও ব্রেকার গাইড</span>
+            </div>
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="p-2.5 flex justify-between"><span>লাইট ও ফ্যান সার্কিট (৫ অ্যাম্পিয়ার পর্যন্ত)</span><strong className="text-blue-600">1.3 Rm (1.0 mm²) / 6A MCB</strong></div>
+              <div className="p-2.5 flex justify-between"><span>সাধারণ সকেট / টিভি লাইন (১০ অ্যাম্পিয়ার)</span><strong className="text-blue-600">1.5 Rm (1.5 mm²) / 10A MCB</strong></div>
+              <div className="p-2.5 flex justify-between"><span>হেভি সকেট / ফ্রিজ / ওয়াটার হিটার (১৫-২০A)</span><strong className="text-blue-600">2.5 Rm (2.5 mm²) / 16A/20A MCB</strong></div>
+              <div className="p-2.5 flex justify-between"><span>এসি (Air Conditioner) / সাব-মেইন লাইন</span><strong className="text-blue-600">4.0 mm² / 25A MCB</strong></div>
+              <div className="p-2.5 flex justify-between"><span>মেইন ইনকামিং লাইন (সম্পূর্ণ বাড়ি)</span><strong className="text-blue-600">6.0 mm² বা তদূর্ধ্ব / 32A-63A</strong></div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
     </div>
