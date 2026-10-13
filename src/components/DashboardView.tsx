@@ -6,7 +6,6 @@ import {
   Plus, 
   ArrowRight, 
   AlertTriangle,
-  Sparkles
 } from 'lucide-react';
 import { AppState, Project } from '../types';
 import { formatTaka, formatWatts, formatAmps } from '../utils/numberFormat';
