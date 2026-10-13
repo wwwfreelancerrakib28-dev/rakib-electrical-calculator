@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { App as CapacitorApp } from '@capacitor/app';
 import { AppState, Customer, Project, Room } from './types';
 import { getInitialState, saveStateToStorage, recalculateProject, recalculateRoom } from './utils/storage';
 import { Navbar } from './components/Navbar';
@@ -22,7 +21,6 @@ import { KnowledgeBaseView } from './components/KnowledgeBaseView';
 import { CostAndBillView } from './components/CostAndBillView';
 import { ReportPrintView } from './components/ReportPrintView';
 import { SettingsView } from './components/SettingsView';
-import { ApkAndInstallModal } from './components/ApkAndInstallModal';
 
 export default function App() {
   const [state, setState] = useState<AppState>(getInitialState);
@@ -30,7 +28,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Exit confirmation modal state for Android Back Button
+  // Exit confirmation modal state for Back Button
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
 
   // Theme state
@@ -45,20 +43,24 @@ export default function App() {
   // APK & Phone Install Guide Modal state
   const [apkModalOpen, setApkModalOpen] = useState(false);
 
-  // Android Hardware Back Button Handler with Exit Dialog
+  // Browser / Android Back Button Handler
   useEffect(() => {
-    const handleBackButton = CapacitorApp.addListener('backButton', () => {
+    const handlePopState = (event: PopStateEvent) => {
+      event.preventDefault();
       if (currentTab !== 'dashboard') {
-        // If not on home/dashboard, go back to dashboard
         setCurrentTab('dashboard');
+        window.history.pushState(null, '', window.location.href);
       } else {
-        // If already on dashboard, show exit confirmation popup
         setExitConfirmOpen(true);
+        window.history.pushState(null, '', window.location.href);
       }
-    });
+    };
+
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', handlePopState);
 
     return () => {
-      handleBackButton.then(subscriber => subscriber.remove());
+      window.removeEventListener('popstate', handlePopState);
     };
   }, [currentTab]);
 
@@ -216,7 +218,6 @@ export default function App() {
     setQuickActionOpen(true);
   };
 
-  // Badge counts
   const totalRooms = state.projects.reduce((sum, p) => sum + p.rooms.length, 0);
 
   return (
@@ -386,7 +387,7 @@ export default function App() {
                 না
               </button>
               <button
-                onClick={() => CapacitorApp.exitApp()}
+                onClick={() => window.close()}
                 className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md transition-all"
               >
                 হ্যাঁ
