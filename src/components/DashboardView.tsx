@@ -3,15 +3,9 @@ import {
   Users, 
   Building2, 
   DoorOpen, 
-  Briefcase, 
-  CheckCircle2, 
-  Banknote, 
-  Zap, 
-  Cable, 
   Plus, 
   ArrowRight, 
   AlertTriangle,
-  Clock,
   Sparkles
 } from 'lucide-react';
 import { AppState, Project } from '../types';
@@ -103,13 +97,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <DoorOpen className="w-4 h-4 text-amber-400" />
               <span>নতুন রুম</span>
             </button>
-            <button
-              onClick={() => onNavigateTo('load-calculator')}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 font-bold text-xs transition-all"
-            >
-              <Zap className="w-4 h-4" />
-              <span>লোড ক্যালকুলেটর</span>
-            </button>
           </div>
         </div>
 
@@ -117,7 +104,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="absolute right-0 top-0 bottom-0 w-80 bg-gradient-to-l from-amber-500/15 via-transparent to-transparent pointer-events-none" />
       </div>
 
-      {/* Top 4 Primary Metric Cards */}
+      {/* Top Primary Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
         {/* Total Customers */}
@@ -167,7 +154,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400">মালামালের খরচ</span>
             <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Banknote className="w-5 h-5" />
+              <Building2 className="w-5 h-5" />
             </div>
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">
