@@ -1,16 +1,13 @@
-Import React from 'react';
+import React from 'react';
 import { 
   Zap, 
   Moon, 
   Sun, 
   Menu, 
   Plus, 
-  Building2, 
-  CheckCircle2, 
-  Search,
-  HardHat
+  Building2
 } from 'lucide-react';
-import { Project, Customer } from '../types';
+import { Project } from '../types';
 
 interface NavbarProps {
   darkMode: boolean;
