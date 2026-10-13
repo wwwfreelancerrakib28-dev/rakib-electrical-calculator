@@ -2,8 +2,6 @@ import React from 'react';
 import { 
   Users, 
   Building2, 
-  DoorOpen, 
-  Plus, 
   ArrowRight, 
   AlertTriangle,
 } from 'lucide-react';
@@ -58,6 +56,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+        
+      {/* Top Primary Metric Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
         {/* Total Customers */}
         <div 
@@ -225,7 +226,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 onClick={() => onOpenQuickAction('room')}
                 className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"
               >
-                <Plus className="w-3.5 h-3.5" />
                 <span>নতুন রুম যোগ করুন</span>
               </button>
             </div>
