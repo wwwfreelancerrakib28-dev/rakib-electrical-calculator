@@ -748,8 +748,8 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
               </div>
             </div>
 
-            {/* TELECOM APPS STYLE 8 ACTION TILES (গর গর করে সাজানো অপশন) */}
-            <div className="grid grid-cols-2 xs:grid-cols-4 sm:grid-cols-8 gap-2 sm:gap-2.5 mt-5">
+            {/* TELECOM APPS STYLE ACTION TILES (নিচের গোল দাগ দেওয়া অতিরিক্ত ডিলিট কার্ডটি বাদ দেওয়া হয়েছে) */}
+            <div className="grid grid-cols-2 xs:grid-cols-4 sm:grid-cols-7 gap-2 sm:gap-2.5 mt-5">
               
               {/* Tile 1: Add Device */}
               <button
@@ -779,7 +779,7 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
                 <span className="text-[9px] font-semibold text-emerald-100">সুইচ/বক্স</span>
               </button>
 
-              {/* Tile 3: All Report (Requested by user: all report name a) */}
+              {/* Tile 3: All Report */}
               <button
                 onClick={() => setAllReportModalOpen(true)}
                 className="flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 active:scale-95 text-white shadow-md transition-all text-center group"
@@ -821,21 +821,7 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
                 <span className="text-[9px] text-slate-500">নাম/সাইজ</span>
               </button>
 
-              {/* Tile 6: Delete Room (Triggers Custom In-App Modal with Pop-up!) */}
-              <button
-                onClick={() => triggerDeleteRoom(selectedRoom)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 active:scale-95 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900 transition-all text-center group"
-              >
-                <div className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center mb-1.5 shadow-sm">
-                  <Trash2 className="w-4 h-4" />
-                </div>
-                <span className="text-[11px] font-bold leading-tight">
-                  রুম ডিলিট
-                </span>
-                <span className="text-[9px] text-rose-500">পপ-আপ সহ</span>
-              </button>
-
-              {/* Tile 7: Undo / Restore History */}
+              {/* Tile 6: Undo / Restore History */}
               <button
                 onClick={() => setUndoHistoryModalOpen(true)}
                 className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all text-center group"
@@ -851,7 +837,7 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
                 </span>
               </button>
 
-              {/* Tile 8: Quick Load Summary */}
+              {/* Tile 7: Quick Load Summary */}
               <button
                 onClick={() => setAllReportModalOpen(true)}
                 className="flex flex-col items-center justify-center p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 active:scale-95 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-900 transition-all text-center group"
@@ -1164,7 +1150,7 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
         </div>
       )}
 
-      {/* CUSTOM IN-APP DELETE ROOM CONFIRMATION POPUP MODAL ("Are you sure you want to delete this room?") */}
+      {/* CUSTOM IN-APP DELETE ROOM CONFIRMATION POPUP MODAL */}
       {roomToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/75 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 border-2 border-rose-500/50 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden p-6 text-center space-y-4">
@@ -1230,7 +1216,7 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
         </div>
       )}
 
-      {/* ALL REPORT MODAL FOR THE ACTIVE ROOM (Requested by user: all report name a) */}
+      {/* ALL REPORT MODAL FOR THE ACTIVE ROOM */}
       {allReportModalOpen && selectedRoom && roomCalc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/75 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
