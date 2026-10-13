@@ -1,4 +1,4 @@
-import React from 'react';
+Import React from 'react';
 import { 
   Zap, 
   Moon, 
@@ -21,7 +21,6 @@ interface NavbarProps {
   activeProjectId: string | null;
   setActiveProjectId: (id: string) => void;
   onOpenQuickAction: (actionType?: 'customer' | 'project' | 'room' | 'calc') => void;
-  onOpenApkGuide: () => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
 }
@@ -35,7 +34,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeProjectId,
   setActiveProjectId,
   onOpenQuickAction,
-  onOpenApkGuide,
   searchQuery,
   setSearchQuery
 }) => {
@@ -92,16 +90,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right: Quick Actions & Theme Toggle */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* APK & Phone App Guide Button */}
-          <button
-            onClick={onOpenApkGuide}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 font-bold text-xs border border-amber-500/30 transition-all shadow-sm active:scale-95"
-            title="মোবাইলে অ্যাপ চালানো ও APK তৈরির গাইড"
-          >
-            <span className="text-sm">📱</span>
-            <span className="hidden sm:inline">মোবাইল অ্যাপ / APK</span>
-            <span className="sm:hidden">APK</span>
-          </button>
 
           {/* Quick Action Button */}
           <button
