@@ -526,48 +526,6 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
       
-      {/* Top Banner & Quick Actions Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-black shadow-md shadow-amber-500/20">
-              <DoorOpen className="w-5 h-5 stroke-[2.5]" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
-                রুম তৈরি ও ওয়্যারিং ম্যানেজার
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                প্রজেক্ট: <strong className="text-slate-800 dark:text-slate-200">{project.name}</strong> • মোট {project.rooms.length}টি রুম
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-          {/* Universal Undo Button */}
-          {undoStack.length > 0 && (
-            <button
-              onClick={() => handleUndoAction()}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-blue-50 dark:bg-blue-950/70 border border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-black text-xs hover:bg-blue-100 transition-all active:scale-95 shadow-sm"
-              title="সর্বশেষ মুছে ফেলা আইটেম ফিরিয়ে আনুন"
-            >
-              <RotateCcw className="w-4 h-4 stroke-[2.5]" />
-              <span>আনডু / রিস্টোর ({undoStack.length})</span>
-            </button>
-          )}
-
-          {/* New Room Button */}
-          <button
-            onClick={openCreateRoomModal}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-black text-xs sm:text-sm shadow-md transition-all"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>নতুন রুম তৈরি</span>
-          </button>
-        </div>
-      </div>
-
       {/* TELECOM APPS STYLE HORIZONTAL ROOM PICKER SLIDER WITH DIRECT DELETE BUTTON */}
       <div className="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="flex items-center justify-between mb-2.5 px-1">
