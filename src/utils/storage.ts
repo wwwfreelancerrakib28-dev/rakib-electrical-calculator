@@ -2,6 +2,8 @@ import { AppState, Customer, Project, Room, DeviceItem, MaterialItem } from '../
 import { SAMPLE_CUSTOMERS, SAMPLE_PROJECTS, INITIAL_SETTINGS } from '../data/sampleData';
 import { DEFAULT_DEVICES } from '../data/initialData';
 import { DEFAULT_MATERIALS } from '../data/materialsCatalog';
+import { db } from '../firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const STORAGE_KEY = 'rakib_electrical_calc_v1';
 
@@ -56,6 +58,17 @@ export function saveStateToStorage(state: AppState): boolean {
   if (typeof window === 'undefined') return false;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    
+    // Cloud Sync to Firebase Firestore (Background save)
+    if (db) {
+      setDoc(doc(db, "appData", "user_main_state"), {
+        ...state,
+        lastUpdated: new Date().toISOString()
+      }).catch((err) => {
+        console.error("Firebase sync error:", err);
+      });
+    }
+
     return true;
   } catch (err) {
     console.error('Failed to save state to localStorage:', err);
