@@ -1,263 +1,153 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
-  Users, 
-  Building2, 
-  AlertTriangle,
-  Sparkles,
-  Layers,
-  ArrowRight
+  Zap, 
+  UserPlus
 } from 'lucide-react';
-import { AppState, Project } from '../types';
-import { formatTaka, formatWatts } from '../utils/numberFormat';
-import { calculateElectricalLoad } from '../utils/electricalCalculations';
+import { AppState, Customer } from '../types';
 
 interface DashboardViewProps {
   state: AppState;
   onNavigateTo: (tab: any) => void;
   onSelectProject: (id: string) => void;
   onOpenQuickAction: (actionType?: 'customer' | 'project' | 'room' | 'calc') => void;
+  onAddCustomer?: (customer: Customer) => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
-  state,
   onNavigateTo,
-  onSelectProject,
+  onAddCustomer
 }) => {
-  const { customers, projects, activeProjectId } = state;
+  const [clientName, setClientName] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [note, setNote] = useState('');
 
-  const totalCustomers = customers.length;
-  const totalProjects = projects.length;
-  const totalRooms = projects.reduce((sum, p) => sum + p.rooms.length, 0);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!clientName.trim()) {
+      alert('দয়া করে ক্লায়েন্টের নাম লিখুন');
+      return;
+    }
 
-  const totalMaterialsCost = projects.reduce((sum, p) => sum + (p.costing.materialsCost || 0), 0);
-  const totalDueAmount = projects.reduce((sum, p) => sum + (p.costing.dueAmount || 0), 0);
+    const newCustomer: Customer = {
+      id: `cust-${Date.now()}`,
+      name: clientName,
+      phone: mobileNumber,
+      address: note,
+      createdAt: new Date().toISOString()
+    };
 
-  const activeProject: Project | undefined = projects.find((p) => p.id === activeProjectId) || projects[0];
+    if (onAddCustomer) {
+      onAddCustomer(newCustomer);
+    }
 
-  const activeProjectLoadWatts = activeProject
-    ? activeProject.rooms.reduce((sum, r) => sum + r.totalWatts, 0)
-    : 0;
-
-  const activeCalc = activeProject
-    ? calculateElectricalLoad({
-        loadWatts: activeProjectLoadWatts,
-        voltage: activeProject.voltage,
-        isThreePhase: activeProject.phase.includes('3-Phase'),
-        powerFactor: activeProject.powerFactor || 0.85,
-        diversityFactor: activeProject.diversityFactor || 0.8,
-        lengthMeters: 25,
-        installationMethod: 'কন্ডুইট (Conduit in Wall)'
-      })
-    : null;
+    alert('ইউজার অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!');
+    setClientName('');
+    setMobileNumber('');
+    setNote('');
+  };
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-300 max-w-2xl mx-auto">
         
-      {/* 1. COMPACT SINGLE-LINE STYLISH INFO BAR */}
-      <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/40 border border-amber-500/30 shadow-lg flex items-center justify-between gap-3 flex-wrap text-xs">
-        <div className="flex items-center gap-3 sm:gap-5 flex-wrap">
-          <div 
-            onClick={() => onNavigateTo('customers')}
-            className="flex items-center gap-1.5 cursor-pointer group"
+      {/* Top Header Bar */}
+      <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg">
+        <div className="flex items-center gap-2.5">
+          <span className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
+            <Zap className="w-5 h-5 fill-amber-400" />
+          </span>
+          <h1 className="text-base sm:text-lg font-black text-amber-400 tracking-tight">
+            এডমিন ড্যাশবোর্ড
+          </h1>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onNavigateTo('load-calculator')}
+            className="px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 font-bold text-xs flex items-center gap-1.5 transition-all"
           >
-            <span className="p-1 rounded-lg bg-blue-500/20 text-blue-400">
-              <Users className="w-3.5 h-3.5" />
-            </span>
-            <span className="text-slate-400">কাস্টমার:</span>
-            <strong className="text-white group-hover:text-amber-400 transition-colors">{totalCustomers} জন</strong>
-          </div>
+            <span>💡</span>
+            <span>ওয়াট ক্যালক</span>
+          </button>
 
-          <span className="text-slate-700">|</span>
-
-          <div 
-            onClick={() => onNavigateTo('projects')}
-            className="flex items-center gap-1.5 cursor-pointer group"
+          <button
+            onClick={() => {
+              if (confirm('লগআউট করতে চান?')) {
+                onNavigateTo('settings');
+              }
+            }}
+            className="px-3.5 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-400 font-bold text-xs transition-all"
           >
-            <span className="p-1 rounded-lg bg-amber-500/20 text-amber-400">
-              <Building2 className="w-3.5 h-3.5" />
-            </span>
-            <span className="text-slate-400">প্রজেক্ট:</span>
-            <strong className="text-white group-hover:text-amber-400 transition-colors">{totalProjects}টি ({totalRooms} রুম)</strong>
-          </div>
-
-          <span className="text-slate-700">|</span>
-
-          <div 
-            onClick={() => onNavigateTo('materials')}
-            className="flex items-center gap-1.5 cursor-pointer group"
-          >
-            <span className="p-1 rounded-lg bg-emerald-500/20 text-emerald-400">
-              <Sparkles className="w-3.5 h-3.5" />
-            </span>
-            <span className="text-slate-400">মালামাল খরচ:</span>
-            <strong className="text-emerald-400">{formatTaka(totalMaterialsCost)}</strong>
-          </div>
-
-          <span className="text-slate-700">|</span>
-
-          <div 
-            onClick={() => onNavigateTo('billing')}
-            className="flex items-center gap-1.5 cursor-pointer group"
-          >
-            <span className="p-1 rounded-lg bg-rose-500/20 text-rose-400">
-              <AlertTriangle className="w-3.5 h-3.5" />
-            </span>
-            <span className="text-slate-400">বকেয়া:</span>
-            <strong className="text-rose-400">{formatTaka(totalDueAmount)}</strong>
-          </div>
+            লগআউট
+          </button>
         </div>
       </div>
 
-      {/* 2. ACTIVE PROJECT CARD WITH 'রুম তালিকা' BUTTON */}
-      {activeProject && activeCalc && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-slate-900/90 border border-amber-500/40 shadow-2xl space-y-4 relative overflow-hidden backdrop-blur-xl">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+      {/* New User Account Creation Form (Matching Picture) */}
+      <div className="p-6 sm:p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-6">
+        
+        <div className="flex items-center gap-2 pb-4 border-b border-slate-800">
+          <span className="text-amber-500 font-black text-lg">
+            <UserPlus className="w-5 h-5 inline mr-1" />+
+          </span>
+          <h2 className="text-base sm:text-lg font-black text-amber-400">
+            নতুন ইউজার অ্যাকাউন্ট তৈরি করুন
+          </h2>
+        </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-3">
-            <div>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
-                  {activeProject.name}
-                </h2>
-                <span className="px-3 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-500 text-slate-950 shadow-sm">
-                  {activeProject.phase}
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 mt-1">
-                কাস্টমার: {activeProject.customerName} • {activeProject.address}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={() => onNavigateTo('rooms')}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all active:scale-95 shadow-lg shadow-amber-500/20 flex items-center gap-1.5"
-              >
-                <Layers className="w-4 h-4" />
-                <span>রুম তালিকা ({activeProject.rooms.length})</span>
-              </button>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Client Name */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-300">
+              ক্লায়েন্টের নাম:
+            </label>
+            <input
+              type="text"
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              placeholder="যেমন: রহিম সাহেব"
+              className="w-full px-4 py-3 text-xs font-bold rounded-2xl border border-slate-700 bg-slate-950/80 text-white focus:ring-2 focus:ring-amber-500 focus:outline-none placeholder:text-slate-600"
+            />
           </div>
 
-          {/* Rooms Preview Cards */}
+          {/* Mobile Number */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-300">
+              মোবাইল নম্বর:
+            </label>
+            <input
+              type="text"
+              value={mobileNumber}
+              onChange={(e) => setMobileNumber(e.target.value)}
+              placeholder="017xxxxxxxx"
+              className="w-full px-4 py-3 text-xs font-bold rounded-2xl border border-slate-700 bg-slate-950/80 text-white focus:ring-2 focus:ring-amber-500 focus:outline-none placeholder:text-slate-600"
+            />
+          </div>
+
+          {/* Note */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-300">
+              নোট (Note):
+            </label>
+            <textarea
+              rows={3}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="জরুরি নোট বা কাজের বিবরণ"
+              className="w-full px-4 py-3 text-xs font-bold rounded-2xl border border-slate-700 bg-slate-950/80 text-white focus:ring-2 focus:ring-amber-500 focus:outline-none placeholder:text-slate-600 resize-none"
+            />
+          </div>
+
+          {/* Submit Button */}
           <div className="pt-2">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                প্রজেক্টের রুমসমূহ:
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {activeProject.rooms.map((room) => (
-                <div
-                  key={room.id}
-                  onClick={() => onNavigateTo('rooms')}
-                  className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/80 hover:border-amber-500 hover:bg-slate-800 transition-all cursor-pointer group shadow-sm"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors truncate">
-                      {room.name}
-                    </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-900 text-amber-300 border border-slate-700 font-semibold">
-                      {room.type}
-                    </span>
-                  </div>
-                  <div className="mt-3 text-xs text-slate-400 flex items-center justify-between">
-                    <span>{room.devices.length}টি ডিভাইস</span>
-                    <span className="font-black font-mono text-amber-400">
-                      {formatWatts(room.totalWatts)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <button
+              type="submit"
+              className="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all shadow-lg shadow-amber-500/20 active:scale-95"
+            >
+              সেভ করুন / অ্যাকাউন্ট তৈরি করুন
+            </button>
           </div>
+        </form>
 
-        </div>
-      )}
-
-      {/* 3. ALL PROJECTS TABLE */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-amber-400" />
-            <h2 className="text-base sm:text-lg font-black text-white">
-              সকল প্রজেক্টের তালিকা
-            </h2>
-          </div>
-          <button
-            onClick={() => onNavigateTo('projects')}
-            className="text-xs font-bold text-amber-400 hover:underline flex items-center gap-1"
-          >
-            <span>সব দেখুন</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-800/80 text-slate-400 uppercase text-[10px] tracking-wider rounded-xl">
-              <tr>
-                <th className="p-3">প্রজেক্ট ও ঠিকানা</th>
-                <th className="p-3">কাস্টমার</th>
-                <th className="p-3">ফেজ</th>
-                <th className="p-3">রুম</th>
-                <th className="p-3">মোট লোড</th>
-                <th className="p-3">মোট বিল</th>
-                <th className="p-3">বাকি</th>
-                <th className="p-3 text-right">অ্যাকশন</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {projects.map((proj) => {
-                const projWatts = proj.rooms.reduce((sum, r) => sum + r.totalWatts, 0);
-                const isCurrent = proj.id === activeProjectId;
-
-                return (
-                  <tr 
-                    key={proj.id} 
-                    className={`hover:bg-slate-800/50 transition-colors ${
-                      isCurrent ? 'bg-amber-500/10' : ''
-                    }`}
-                  >
-                    <td className="p-3 font-semibold text-white">
-                      <div className="flex items-center gap-1.5">
-                        {isCurrent && <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>}
-                        <span>{proj.name}</span>
-                      </div>
-                      <div className="text-[11px] font-normal text-slate-400">{proj.address}</div>
-                    </td>
-                    <td className="p-3 font-medium">{proj.customerName}</td>
-                    <td className="p-3">
-                      <span className="px-2 py-0.5 rounded bg-slate-800 text-[11px] text-amber-300 border border-slate-700">
-                        {proj.phase.includes('3-Phase') ? '3-Phase' : '1-Phase'}
-                      </span>
-                    </td>
-                    <td className="p-3 font-medium">{proj.rooms.length}টি</td>
-                    <td className="p-3 font-bold font-mono text-amber-400">
-                      {formatWatts(projWatts)}
-                    </td>
-                    <td className="p-3 font-bold">{formatTaka(proj.costing.totalBill)}</td>
-                    <td className="p-3 font-bold text-rose-400">
-                      {formatTaka(proj.costing.dueAmount)}
-                    </td>
-                    <td className="p-3 text-right">
-                      <button
-                        onClick={() => {
-                          onSelectProject(proj.id);
-                          onNavigateTo('rooms');
-                        }}
-                        className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[11px] transition-all shadow active:scale-95"
-                      >
-                        প্রবেশ করুন
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
       </div>
 
     </div>
