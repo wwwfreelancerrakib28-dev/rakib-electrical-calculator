@@ -516,32 +516,32 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
           className="bg-white dark:bg-slate-900 rounded-3xl border-2 border-amber-400/90 dark:border-amber-500/70 shadow-2xl overflow-hidden transition-all"
         >
           {/* Room Header bar */}
-          <div className="p-4 sm:p-6 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-b border-slate-200 dark:border-slate-800">
+          <div className="p-4 sm:p-5 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-b border-slate-200 dark:border-slate-800">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <span className="text-3xl">{getRoomEmoji(selectedRoom.type)}</span>
+                  <span className="text-2xl">{getRoomEmoji(selectedRoom.type)}</span>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                      <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
                         {selectedRoom.name}
                         <button
                           onClick={() => openEditRoomModal(selectedRoom)}
                           className="p-1 rounded-lg text-amber-500 hover:bg-amber-500/10 transition-colors"
                           title="রুমের নাম এডিট করুন"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <Edit2 className="w-3.5 h-3.5" />
                         </button>
                       </h2>
-                      <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500 text-slate-950 shadow-sm">
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-500 text-slate-950 shadow-sm">
                         {selectedRoom.type}
                       </span>
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                         {selectedRoom.status}
                       </span>
                     </div>
                     {selectedRoom.areaSqFt ? (
-                      <p className="text-xs text-slate-500 font-semibold mt-1">
+                      <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
                         সাইজ: {selectedRoom.lengthFt}' × {selectedRoom.widthFt}' = {selectedRoom.areaSqFt} বর্গফুট
                         {selectedRoom.notes && ` • নোট: ${selectedRoom.notes}`}
                       </p>
@@ -550,8 +550,8 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
                 </div>
               </div>
 
-              {/* COMPACT ROOM SELECTOR & ACTION BUTTONS NEXT TO EDIT */}
-              <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+              {/* CLEAN ACTION BAR (Single instances of Report, Repeat, Edit, Undo) */}
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <select
                   value={selectedRoomId || ''}
                   onChange={(e) => handleSelectRoomAndBringToFront(e.target.value)}
@@ -567,135 +567,77 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
                 <button
                   onClick={openCreateRoomModal}
                   className="p-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition-all shadow active:scale-95"
-                  title="নতুন রুম যোগ করুন (রুম ১, রুম ২...)"
+                  title="নতুন রুম যোগ করুন"
                 >
                   <Plus className="w-4 h-4 stroke-[3]" />
                 </button>
 
                 <button
-                  onClick={() => openEditRoomModal(selectedRoom)}
-                  className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-colors"
+                  onClick={() => setAllReportModalOpen(true)}
+                  className="px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold text-xs flex items-center gap-1 border border-blue-200 dark:border-blue-900 shadow-xs"
+                  title="রিপোর্ট"
                 >
-                  <Edit2 className="w-3.5 h-3.5" />
-                  <span>এডিট</span>
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>রিপোর্ট</span>
                 </button>
+
+                <button
+                  onClick={() => onDuplicateRoom(project.id, selectedRoom)}
+                  className="px-2.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center gap-1 border border-purple-200 dark:border-purple-900 shadow-xs"
+                  title="রিপিট"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>রিপিট</span>
+                </button>
+
+                <button
+                  onClick={() => setUndoHistoryModalOpen(true)}
+                  className="px-2.5 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold text-xs flex items-center gap-1 border border-teal-200 dark:border-teal-900 shadow-xs"
+                  title="আনডু"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>আনডু</span>
+                </button>
+
                 <button
                   onClick={() => triggerDeleteRoom(selectedRoom)}
-                  className="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center gap-1.5 border border-rose-200 dark:border-rose-900 transition-colors"
+                  className="p-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900 transition-colors"
+                  title="রুম ডিলিট"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>রুম ডিলিট</span>
                 </button>
               </div>
-            </div>
-
-            {/* COMPACT 4-IN-A-ROW ICON BUTTONS */}
-            <div className="grid grid-cols-4 gap-2 mt-4">
-              <button
-                onClick={() => setAllReportModalOpen(true)}
-                className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 active:scale-95 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 transition-all shadow-sm"
-                title="অল রিপোর্ট"
-              >
-                <FileText className="w-4 h-4 mb-1" />
-                <span className="text-[10px] font-bold truncate w-full text-center">রিপোর্ট</span>
-              </button>
-
-              <button
-                onClick={() => onDuplicateRoom(project.id, selectedRoom)}
-                className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 active:scale-95 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900 transition-all shadow-sm"
-                title="রুম রিপিট বা ডুপ্লিকেট"
-              >
-                <Copy className="w-4 h-4 mb-1" />
-                <span className="text-[10px] font-bold truncate w-full text-center">রিপিট</span>
-              </button>
-
-              <button
-                onClick={() => openEditRoomModal(selectedRoom)}
-                className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 active:scale-95 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900 transition-all shadow-sm"
-                title="রুম এডিট"
-              >
-                <Edit2 className="w-4 h-4 mb-1" />
-                <span className="text-[10px] font-bold truncate w-full text-center">এডিট</span>
-              </button>
-
-              <button
-                onClick={() => setUndoHistoryModalOpen(true)}
-                className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 active:scale-95 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-900 transition-all shadow-sm"
-                title="আনডু হিস্ট্রি"
-              >
-                <RotateCcw className="w-4 h-4 mb-1" />
-                <span className="text-[10px] font-bold truncate w-full text-center">আনডু</span>
-              </button>
             </div>
           </div>
 
-          {/* DYNAMIC ELECTRICAL CALCULATIONS */}
+          {/* COMPACT SINGLE-LINE ELECTRICAL SUMMARY BAR (Replacing Big Cards) */}
           {roomCalc && (
-            <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-amber-500" />
-                  <span>রুমের লাইভ ইলেকট্রিক্যাল হিসাব ও তারের সাইজ:</span>
+            <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap text-xs">
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="font-black text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                  <Zap className="w-3.5 h-3.5" />
+                  {formatWatts(selectedRoom.totalWatts)} ({selectedRoom.totalAmps.toFixed(1)}A)
                 </span>
-                <button
-                  onClick={() => setAllReportModalOpen(true)}
-                  className="text-xs font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  <span>সম্পূর্ণ অল রিপোর্ট খুলুন ↗</span>
-                </button>
+                <span className="text-slate-300 dark:text-slate-700">|</span>
+                <span className="text-slate-700 dark:text-slate-300">
+                  তার: <strong className="text-blue-600 dark:text-blue-400">{roomCalc.recommendedCable.sizeMm2}</strong>
+                </span>
+                <span className="text-slate-300 dark:text-slate-700">|</span>
+                <span className="text-slate-700 dark:text-slate-300">
+                  ব্রেকার: <strong className="text-emerald-600 dark:text-emerald-400">{roomCalc.recommendedBreakerRatingA}A</strong>
+                </span>
+                <span className="text-slate-300 dark:text-slate-700">|</span>
+                <span className="text-slate-700 dark:text-slate-300">
+                  খরচ: <strong className="text-emerald-600 dark:text-emerald-400">{formatTaka(selectedRoom.estimatedMaterialCost)}</strong>
+                </span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-                  <span className="text-[10px] text-slate-400 font-semibold block">রুমের মোট লোড</span>
-                  <span className="text-base sm:text-lg font-black text-amber-600 dark:text-amber-400 block mt-0.5">
-                    {formatWatts(selectedRoom.totalWatts)}
-                  </span>
-                  <span className="text-[10px] text-slate-500 font-mono">
-                    কারেন্ট: {formatAmps(selectedRoom.totalAmps)}
-                  </span>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-                  <span className="text-[10px] text-slate-400 font-semibold block">প্রস্তাবিত মেইন তারের সাইজ</span>
-                  <span className="text-base sm:text-lg font-black text-blue-600 dark:text-blue-400 block mt-0.5 truncate">
-                    {roomCalc.recommendedCable.sizeMm2}
-                  </span>
-                  <span className="text-[10px] text-slate-500 truncate block">
-                    {roomCalc.recommendedCable.rmEquivalent} কপার তার
-                  </span>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-                  <span className="text-[10px] text-slate-400 font-semibold block">প্রস্তাবিত সার্কিট ব্রেকার</span>
-                  <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 block mt-0.5">
-                    {roomCalc.recommendedBreakerRatingA}A Type C
-                  </span>
-                  <span className="text-[10px] text-slate-500">
-                    আর্থ তার: {roomCalc.recommendedEarthWire}
-                  </span>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-                  <span className="text-[10px] text-slate-400 font-semibold block">রুমের মালামাল মোট খরচ</span>
-                  <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 block mt-0.5">
-                    {formatTaka(selectedRoom.estimatedMaterialCost)}
-                  </span>
-                  <span className="text-[10px] text-slate-500">
-                    মোট {selectedRoom.materials.length}টি মালামাল আইটেম
-                  </span>
-                </div>
-              </div>
-
-              {roomCalc.recommendedRccbRequired && (
-                <div className="mt-3 p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
-                  <ShieldAlert className="w-4 h-4 shrink-0" />
-                  <span>
-                    <strong>বাথরুম / গিজার শক প্রটেকশন:</strong> এই রুমের লাইনে অবশ্যই ৩০mA RCCB বা RCBO সার্কিট ব্রেকার ব্যবহার করুন।
-                  </span>
-                </div>
-              )}
+              <button
+                onClick={() => setAllReportModalOpen(true)}
+                className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
+              >
+                <span>পূর্ণাঙ্গ বিবরণ ↗</span>
+              </button>
             </div>
           )}
 
