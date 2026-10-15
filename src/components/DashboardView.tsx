@@ -4,7 +4,11 @@ import {
   UserPlus, 
   FolderPlus, 
   ArrowRight,
-  Calculator
+  Calculator,
+  Users,
+  Trash2,
+  Edit3,
+  Plus
 } from 'lucide-react';
 import { AppState, Customer, Project } from '../types';
 
@@ -15,21 +19,29 @@ interface DashboardViewProps {
   onOpenQuickAction: (actionType?: 'customer' | 'project' | 'room' | 'calc') => void;
   onAddCustomer?: (customer: Customer) => void;
   onAddProject?: (project: Project) => void;
+  onUpdateState?: React.Dispatch<React.SetStateAction<AppState>>;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
+  state,
   onNavigateTo,
   onAddCustomer,
-  onAddProject
+  onAddProject,
+  onUpdateState
 }) => {
   const [activeSubView, setActiveSubView] = useState<
-    'home' | 'create-customer' | 'create-project' | 'video-auto-calc'
+    'home' | 'create-customer' | 'create-project' | 'video-auto-calc' | 'users-list' | 'user-profile'
   >('home');
 
   // Customer Form State
   const [clientName, setClientName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [note, setNote] = useState('');
+
+  // Selected User for Profile Management
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [customerTasks, setCustomerTasks] = useState<string[]>([]);
+  const [newTaskText, setNewTaskText] = useState('');
 
   // Project Form State
   const [projectName, setProjectName] = useState('');
@@ -49,15 +61,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     mainMcb: string;
   } | null>(null);
 
-  // Video Formula Calculation Logic: I = P / (V * 0.9), and Safety 3x margin
+  const customersList = state.customers || [];
+
+  // Video Formula Calculation Logic
   const handleRunVideoCalc = (e: React.FormEvent) => {
     e.preventDefault();
     const watt = parseFloat(inputWatt) || 0;
     const voltage = state.settings?.defaultVoltage || 220;
     
-    // Running Ampere with 0.9 Power Factor
     const currentAmp = Math.round((watt / (voltage * 0.9)) * 100) / 100;
-    // 3x Safety Margin as explained in video
     const safetyAmp = Math.round(currentAmp * 3 * 10) / 10;
 
     let subCable = '1.0 RM তার';
@@ -116,12 +128,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       return;
     }
 
-    const newCustomer: Customer = {
+    const newCustomer: Customer & { tasks?: string[] } = {
       id: `cust-${Date.now()}`,
       name: clientName,
       phone: mobileNumber,
       address: note,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      tasks: ['মেইন সুইচবোর্ড ও ওয়্যারিং সেটআপ']
     };
 
     if (onAddCustomer) {
@@ -133,6 +146,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     setMobileNumber('');
     setNote('');
     setActiveSubView('home');
+  };
+
+  const handleDeleteCustomer = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('এই ইউজার অ্যাকাউন্টটি ডিলিট করতে চান?')) {
+      const updated = customersList.filter(c => c.id !== id);
+      if (onUpdateState) {
+        onUpdateState(prev => ({ ...prev, customers: updated }));
+      }
+    }
+  };
+
+  const handleAddTaskToUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskText.trim()) return;
+    setCustomerTasks(prev => [...prev, newTaskText]);
+    setNewTaskText('');
+  };
+
+  const handleDeleteTask = (index: number) => {
+    setCustomerTasks(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSaveProject = (e: React.FormEvent) => {
@@ -173,7 +207,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300 max-w-2xl mx-auto">
+    <div className="space-y-6 animate-in fade-in duration-300 max-w-2xl mx-auto pb-12">
         
       {/* Top Header Bar */}
       <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg">
@@ -205,6 +239,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           >
             লগআউট
           </button>
+        </div>
+      </div>
+
+      {/* TOP USER CARD (Shows Total Users and Direct Access) */}
+      <div 
+        onClick={() => setActiveSubView('users-list')}
+        className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/40 border border-amber-500/40 shadow-xl cursor-pointer transition-all hover:scale-[1.01] flex items-center justify-between group"
+      >
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black">
+            <Users className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xs sm:text-sm font-black text-white group-hover:text-amber-400 transition-colors">
+              ইউজার / ক্লায়েন্ট তালিকা
+            </h2>
+            <p className="text-[11px] font-bold text-slate-400 mt-0.5">
+              মোট সংরক্ষিত ইউজার: <span className="text-amber-400 font-black">{customersList.length} জন</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 text-xs font-black text-amber-400 bg-amber-500/10 px-3 py-2 rounded-xl border border-amber-500/30">
+          <span>তালিকা দেখুন</span>
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </div>
       </div>
 
@@ -279,6 +338,108 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* SUB VIEW: USERS LIST */}
+      {activeSubView === 'users-list' && (
+        <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-4 animate-in fade-in">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <h2 className="text-sm font-black text-amber-400">সকল ইউজার / ক্লায়েন্টের তালিকা ({customersList.length})</h2>
+            <button onClick={() => setActiveSubView('home')} className="text-xs font-bold text-slate-400 hover:text-white px-3 py-1.5 rounded-xl bg-slate-800">← ফিরে যান</button>
+          </div>
+
+          {customersList.length === 0 ? (
+            <div className="text-center py-10 text-slate-500 text-xs font-bold">
+              কোনো ইউজার অ্যাকাউন্ট পাওয়া যায়নি। নতুন অ্যাকাউন্ট তৈরি করুন।
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {customersList.map((cust: any) => (
+                <div 
+                  key={cust.id}
+                  onClick={() => {
+                    setSelectedCustomer(cust);
+                    setCustomerTasks(cust.tasks || ['মেইন বোর্ডের ওয়্যারিং']);
+                    setActiveSubView('user-profile');
+                  }}
+                  className="p-4 rounded-2xl bg-slate-950 border border-slate-800 hover:border-amber-500/50 cursor-pointer transition-all flex items-center justify-between group"
+                >
+                  <div className="space-y-1">
+                    <h3 className="text-xs sm:text-sm font-black text-white group-hover:text-amber-400 transition-colors">
+                      {cust.name}
+                    </h3>
+                    <p className="text-[11px] font-bold text-slate-400">মোবাইল: {cust.phone || 'দেওয়া হয়নি'}</p>
+                    <p className="text-[10px] text-slate-500">নোট: {cust.address || 'কোনো নোট নেই'}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={(e) => handleDeleteCustomer(cust.id, e)}
+                      className="p-2 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30"
+                      title="ডিলিট করুন"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <div className="px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 font-black text-xs">
+                      প্রোফাইল →
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* SUB VIEW: USER PROFILE & TASKS MANAGEMENT */}
+      {activeSubView === 'user-profile' && selectedCustomer && (
+        <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-5 animate-in fade-in">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div>
+              <h2 className="text-sm font-black text-amber-400">ক্লায়েন্ট প্রোফাইল: {selectedCustomer.name}</h2>
+              <p className="text-[10px] text-slate-400">মোবাইল: {selectedCustomer.phone}</p>
+            </div>
+            <button onClick={() => setActiveSubView('users-list')} className="text-xs font-bold text-slate-400 hover:text-white px-3 py-1.5 rounded-xl bg-slate-800">← ইউজার লিস্ট</button>
+          </div>
+
+          {/* Task Management Section */}
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+            <h3 className="text-xs font-black text-white">📋 এই ইউজারের কাজের তালিকা ও ওয়্যারিং মডিউল:</h3>
+
+            {/* Add Task Form */}
+            <form onSubmit={handleAddTaskToUser} className="flex gap-2">
+              <input 
+                type="text" 
+                value={newTaskText}
+                onChange={(e) => setNewTaskText(e.target.value)}
+                placeholder="নতুন কাজের বিবরণ লিখুন (যেমন: এসি লাইন ও সাব-বোর্ড)" 
+                className="flex-1 px-3.5 py-2.5 text-xs font-bold rounded-xl border border-slate-700 bg-slate-900 text-white focus:outline-none"
+              />
+              <button 
+                type="submit"
+                className="px-4 py-2.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1 shadow-lg"
+              >
+                <Plus className="w-4 h-4" />
+                <span>যুক্ত করুন</span>
+              </button>
+            </form>
+
+            {/* Task Items */}
+            <div className="space-y-2 pt-2">
+              {customerTasks.map((task, idx) => (
+                <div key={idx} className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                  <span className="text-xs font-bold text-emerald-400">✔ {task}</span>
+                  <button 
+                    onClick={() => handleDeleteTask(idx)}
+                    className="p-1.5 rounded-lg bg-rose-600/20 text-rose-400 hover:bg-rose-600/30"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -386,7 +547,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
                 <div className="flex justify-between p-2 rounded-xl bg-slate-900">
                   <span className="text-slate-300 font-bold">সার্কিট ব্রেকার (MCB):</span>
-                  <span className="text-emerald-400 font-black">{calcResult.mcb}</span>
+                  <span className="text-emerald-400 font-black">{calcTest(calcResult.mcb)}</span>
                 </div>
                 <div className="flex justify-between p-2 rounded-xl bg-slate-900">
                   <span className="text-slate-300 font-bold">প্রটেকশন (RCCB):</span>
@@ -413,3 +574,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     </div>
   );
 };
+
+function calcTest(val: string) {
+  return val;
+}
