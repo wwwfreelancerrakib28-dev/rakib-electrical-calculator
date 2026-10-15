@@ -40,10 +40,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   // Custom Devices State aligned with CatalogDevice type
   const [customDevices, setCustomDevices] = useState<CatalogDevice[]>(
     state.customDevices || [
-      { id: '1', name: 'সিলিং ফ্যান', defaultWatts: 75, defaultPowerFactor: 0.9, isHeavyLoad: false, category: 'ফ্যান', notes: '' },
-      { id: '2', name: 'LED লাইট', defaultWatts: 20, defaultPowerFactor: 0.9, isHeavyLoad: false, category: 'লাইট', notes: '' },
-      { id: '3', name: 'ফ্রিজ', defaultWatts: 250, defaultPowerFactor: 0.85, isHeavyLoad: false, category: 'অ্যাপ্লায়েন্স', notes: '' },
-      { id: '4', name: 'এসি (1.5 Ton)', defaultWatts: 1800, defaultPowerFactor: 0.85, isHeavyLoad: true, category: 'এসি', notes: '' }
+      { name: 'সিলিং ফ্যান', category: 'ফ্যান', defaultWatts: 75, defaultPowerFactor: 0.9, voltage: 220, isHeavyLoad: false, startingMultiplier: 1, recommendedWire: '1.5 mm²', recommendedBreaker: '6A', notes: '' },
+      { name: 'LED লাইট', category: 'লাইট', defaultWatts: 20, defaultPowerFactor: 0.9, voltage: 220, isHeavyLoad: false, startingMultiplier: 1, recommendedWire: '1.5 mm²', recommendedBreaker: '6A', notes: '' },
+      { name: 'ফ্রিজ', category: 'অ্যাপ্লায়েন্স', defaultWatts: 250, defaultPowerFactor: 0.85, voltage: 220, isHeavyLoad: false, startingMultiplier: 2, recommendedWire: '2.5 mm²', recommendedBreaker: '10A', notes: '' },
+      { name: 'এসি (1.5 Ton)', category: 'এসি', defaultWatts: 1800, defaultPowerFactor: 0.85, voltage: 220, isHeavyLoad: true, startingMultiplier: 3, recommendedWire: '4.0 mm²', recommendedBreaker: '20A', notes: '' }
     ]
   );
 
@@ -70,12 +70,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     if (!newDeviceName || !newDeviceWatts) return;
 
     const newItem: CatalogDevice = {
-      id: `cdev-${Date.now()}`,
       name: newDeviceName,
+      category: newDeviceCat,
       defaultWatts: Number(newDeviceWatts),
       defaultPowerFactor: 0.85,
+      voltage: 220,
       isHeavyLoad: newDeviceHeavy,
-      category: newDeviceCat,
+      startingMultiplier: 1.5,
+      recommendedWire: '2.5 mm²',
+      recommendedBreaker: '10A',
       notes: ''
     };
 
@@ -95,8 +98,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     setTimeout(() => setSaveSuccessMsg(''), 3000);
   };
 
-  const handleDeleteDevice = (id: string) => {
-    const updatedDevices = customDevices.filter(d => d.id !== id);
+  const handleDeleteDevice = (index: number) => {
+    const updatedDevices = customDevices.filter((_, i) => i !== index);
     setCustomDevices(updatedDevices);
 
     const updatedState: AppState = {
@@ -219,8 +222,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <input
                 type="text"
                 required
-                value={settings.contractorName}
-                onChange={(e) => setSettings({ ...settings, contractorName: e.target.value })}
+                value={settings.electricianName}
+                onChange={(e) => setSettings({ ...settings, electricianName: e.target.value })}
                 className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
               />
             </div>
@@ -230,8 +233,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">মোবাইল নম্বর</label>
                 <input
                   type="text"
-                  value={settings.phone}
-                  onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
+                  value={settings.electricianPhone}
+                  onChange={(e) => setSettings({ ...settings, electricianPhone: e.target.value })}
                   className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 />
               </div>
@@ -239,8 +242,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ঠিকানা</label>
                 <input
                   type="text"
-                  value={settings.address}
-                  onChange={(e) => setSettings({ ...settings, address: e.target.value })}
+                  value={settings.electricianAddress}
+                  onChange={(e) => setSettings({ ...settings, electricianAddress: e.target.value })}
                   className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 />
               </div>
@@ -392,8 +395,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {customDevices.map((device) => (
-                <tr key={device.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+              {customDevices.map((device, index) => (
+                <tr key={index} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                   <td className="p-2.5 font-bold text-slate-900 dark:text-white">{device.name}</td>
                   <td className="p-2.5 font-bold text-amber-600">{device.defaultWatts} W</td>
                   <td className="p-2.5">
@@ -401,7 +404,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </td>
                   <td className="p-2.5 text-right">
                     <button
-                      onClick={() => handleDeleteDevice(device.id)}
+                      onClick={() => handleDeleteDevice(index)}
                       className="px-2 py-1 rounded bg-red-50 hover:bg-red-100 text-red-600 font-bold text-[11px] flex items-center gap-1 ml-auto"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
