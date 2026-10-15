@@ -126,7 +126,7 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
           কোনো প্রজেক্ট নির্বাচন করা নেই
         </h2>
         <p className="text-xs text-slate-500 max-w-md mx-auto mb-4">
-          রুম ও ওয়্যারিংয়ের হিসাব পরিচালনা করতে প্রথমে উপরে প্রজেক্ট সিলেক্ট করুন অথবা নতুন প্রজেক্ট তৈরি করুন।
+          রুম ও ওয়্যারিংয়ের হিসাব পরিচালনা করতে প্রথমে উপরে প্রজেক্ট সিলেক্ট করুন অথবা নতুন প্রজেক্ট তৈরি করুন।
         </p>
         <div className="flex flex-wrap justify-center gap-2">
           {projects.map((p) => (
@@ -166,12 +166,12 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
 
   const getRoomEmoji = (type: string) => {
     if (type.includes('বেড')) return '🛏️';
-    if (type.includes('ড্রয়িং')) return '🛋️';
+    if (type.includes('ড্রয়িং')) return '🛋️';
     if (type.includes('ডাইনিং')) return '🍽️';
     if (type.includes('রান্না') || type.includes('কিচেন')) return '🍳';
     if (type.includes('বাথরুম')) return '🚿';
     if (type.includes('বারান্দা')) return '🌿';
-    if (type.includes('সিঁড়ি')) return '🪜';
+    if (type.includes('সিঁড়ি')) return '🪜';
     if (type.includes('গ্যারেজ')) return '🚗';
     if (type.includes('দোকান')) return '🏪';
     if (type.includes('অফিস')) return '🏢';
@@ -599,102 +599,43 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
               </div>
             </div>
 
-            {/* ACTION TILES */}
-            <div className="grid grid-cols-2 xs:grid-cols-4 sm:grid-cols-7 gap-2 sm:gap-2.5 mt-5">
-              
-              <button
-                onClick={handleOpenAddDevice}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-b from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-slate-950 shadow-md transition-all text-center group"
-              >
-                <div className="w-8 h-8 rounded-xl bg-slate-950 text-amber-400 flex items-center justify-center mb-1.5 shadow-inner">
-                  <Zap className="w-4 h-4 fill-amber-400" />
-                </div>
-                <span className="text-[11px] font-black leading-tight text-slate-950">
-                  ডিভাইস যোগ
-                </span>
-                <span className="text-[9px] font-semibold text-slate-900/80">লোড দিন</span>
-              </button>
-
-              <button
-                onClick={handleOpenAddMaterial}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 active:scale-95 text-white shadow-md transition-all text-center group"
-              >
-                <div className="w-8 h-8 rounded-xl bg-slate-950 text-emerald-400 flex items-center justify-center mb-1.5 shadow-inner">
-                  <Package className="w-4 h-4" />
-                </div>
-                <span className="text-[11px] font-black leading-tight">
-                  মালামাল যোগ
-                </span>
-                <span className="text-[9px] font-semibold text-emerald-100">সুইচ/বক্স</span>
-              </button>
-
+            {/* COMPACT 4-IN-A-ROW ICON BUTTONS */}
+            <div className="grid grid-cols-4 gap-2 mt-4">
               <button
                 onClick={() => setAllReportModalOpen(true)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 active:scale-95 text-white shadow-md transition-all text-center group"
+                className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 active:scale-95 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 transition-all shadow-sm"
+                title="অল রিপোর্ট"
               >
-                <div className="w-8 h-8 rounded-xl bg-slate-950 text-blue-400 flex items-center justify-center mb-1.5 shadow-inner">
-                  <FileText className="w-4 h-4" />
-                </div>
-                <span className="text-[11px] font-black leading-tight">
-                  অল রিপোর্ট
-                </span>
-                <span className="text-[9px] font-semibold text-blue-100">তার ও হিসাব</span>
+                <FileText className="w-4 h-4 mb-1" />
+                <span className="text-[10px] font-bold truncate w-full text-center">রিপোর্ট</span>
               </button>
 
               <button
                 onClick={() => onDuplicateRoom(project.id, selectedRoom)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all text-center group"
+                className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 active:scale-95 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900 transition-all shadow-sm"
+                title="রুম রিপিট বা ডুপ্লিকেট"
               >
-                <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-1.5">
-                  <Copy className="w-4 h-4" />
-                </div>
-                <span className="text-[11px] font-bold leading-tight">
-                  রুম রিপিট
-                </span>
-                <span className="text-[9px] text-slate-500">ডুপ্লিকেট কপি</span>
+                <Copy className="w-4 h-4 mb-1" />
+                <span className="text-[10px] font-bold truncate w-full text-center">রিপিট</span>
               </button>
 
               <button
                 onClick={() => openEditRoomModal(selectedRoom)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all text-center group"
+                className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 active:scale-95 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900 transition-all shadow-sm"
+                title="রুম এডিট"
               >
-                <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-1.5">
-                  <Edit2 className="w-4 h-4" />
-                </div>
-                <span className="text-[11px] font-bold leading-tight">
-                  রুম এডিট
-                </span>
-                <span className="text-[9px] text-slate-500">নাম/সাইজ</span>
+                <Edit2 className="w-4 h-4 mb-1" />
+                <span className="text-[10px] font-bold truncate w-full text-center">এডিট</span>
               </button>
 
               <button
                 onClick={() => setUndoHistoryModalOpen(true)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all text-center group"
+                className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 active:scale-95 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-900 transition-all shadow-sm"
+                title="আনডু হিস্ট্রি"
               >
-                <div className="w-8 h-8 rounded-xl bg-teal-100 dark:bg-teal-950 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-1.5">
-                  <RotateCcw className="w-4 h-4" />
-                </div>
-                <span className="text-[11px] font-bold leading-tight">
-                  আনডু হিস্ট্রি
-                </span>
-                <span className="text-[9px] text-slate-500">
-                  {undoStack.length > 0 ? `${undoStack.length}টি জমা` : 'খালি'}
-                </span>
+                <RotateCcw className="w-4 h-4 mb-1" />
+                <span className="text-[10px] font-bold truncate w-full text-center">আনডু</span>
               </button>
-
-              <button
-                onClick={() => setAllReportModalOpen(true)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 active:scale-95 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-900 transition-all text-center group"
-              >
-                <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center mb-1.5 font-bold">
-                  <Flame className="w-4 h-4" />
-                </div>
-                <span className="text-[11px] font-bold leading-tight">
-                  তার ও ব্রেকার
-                </span>
-                <span className="text-[9px] text-amber-600 dark:text-amber-400">স্পেক্স</span>
-              </button>
-
             </div>
           </div>
 
@@ -840,7 +781,7 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
                         <strong className="text-amber-600 dark:text-amber-400 text-sm">
                           {dev.totalWatts} W
                         </strong>{' '}
-                        • পাওয়ার ফ্যাক্টর: {dev.powerFactor}
+                        • পাওয়ার ফ্যাক্টর: {dev.powerFactor}
                       </div>
                       {dev.suggestedWire && (
                         <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-2.5 flex-wrap">
@@ -880,7 +821,7 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
                   <div className="p-8 text-center text-xs text-slate-400 bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
                     <Zap className="w-8 h-8 text-amber-500 mx-auto mb-2 opacity-60" />
                     <p className="font-bold text-slate-600 dark:text-slate-400">
-                      এই রুমে কোনো ডিভাইস যুক্ত করা হয়নি।
+                      এই রুমে কোনো ডিভাইস যুক্ত করা হয়নি।
                     </p>
                   </div>
                 )}
@@ -936,7 +877,7 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
                   <div className="p-8 text-center text-xs text-slate-400 bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
                     <Package className="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-60" />
                     <p className="font-bold text-slate-600 dark:text-slate-400">
-                      এই রুমে কোনো মালামাল যুক্ত করা হয়নি।
+                      এই রুমে কোনো মালামাল যুক্ত করা হয়নি।
                     </p>
                   </div>
                 )}
@@ -957,14 +898,14 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-950 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-amber-500/60 flex items-center gap-3 animate-in slide-in-from-bottom duration-200">
           <Trash2 className="w-4 h-4 text-rose-400 shrink-0" />
           <div className="text-xs">
-            <span><strong>{undoToast.item.name}</strong> মুছে ফেলা হয়েছে।</span>
+            <span><strong>{undoToast.item.name}</strong> মুছে ফেলা হয়েছে।</span>
           </div>
           <button
             onClick={() => handleUndoAction(undoToast.item)}
             className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all active:scale-95 flex items-center gap-1.5 shadow"
           >
             <RotateCcw className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>পূর্বাবস্থায় ফেরান (Undo)</span>
+            <span>পূর্বাবস্থায় ফেরান (Undo)</span>
           </button>
           <button
             onClick={() => setUndoToast(null)}
@@ -1073,7 +1014,7 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
 
               <div className="space-y-4">
                 <h4 className="font-extrabold text-sm text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">
-                  রুম অনুযায়ী বিস্তারিত হিসাব:
+                  রুম অনুযায়ী বিস্তারিত হিসাব:
                 </h4>
 
                 {project.rooms.map((room) => {
@@ -1137,8 +1078,8 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
                               <tr>
                                 <th className="p-2">ডিভাইস</th>
                                 <th className="p-2 text-center">সংখ্যা</th>
-                                <th className="p-2 text-right">ওয়াট</th>
-                                <th className="p-2 text-right">মোট ওয়াট</th>
+                                <th className="p-2 text-right">ওয়াট</th>
+                                <th className="p-2 text-right">মোট ওয়াট</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1158,7 +1099,7 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
                           </table>
                         </div>
                       ) : (
-                        <p className="text-[11px] text-slate-400 italic">এই রুমে কোনো ডিভাইস যোগ করা হয়নি।</p>
+                        <p className="text-[11px] text-slate-400 italic">এই রুমে কোনো ডিভাইস যোগ করা হয়নি।</p>
                       )}
                     </div>
                   );
@@ -1210,12 +1151,12 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
                   className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                 >
                   <option value="বেডরুম">বেডরুম</option>
-                  <option value="ড্রয়িং রুম">ড্রয়িং রুম</option>
+                  <option value="ড্রয়িং রুম">ড্রয়িং রুম</option>
                   <option value="ডাইনিং রুম">ডাইনিং রুম</option>
                   <option value="রান্নাঘর">রান্নাঘর</option>
                   <option value="বাথরুম">বাথরুম</option>
                   <option value="বারান্দা">বারান্দা</option>
-                  <option value="সিঁড়িঘর">সিঁড়িঘর</option>
+                  <option value="সিঁড়িঘর">সিঁড়িঘর</option>
                   <option value="গ্যারেজ">গ্যারেজ</option>
                   <option value="দোকান">দোকান</option>
                   <option value="অফিস">অফিস</option>
@@ -1269,7 +1210,7 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
                 </label>
                 <input
                   type="text"
-                  placeholder="যেমন: ফলস সিলিং ও ডাবল এসি রয়েছে"
+                  placeholder="যেমন: ফলস সিলিং ও ডাবল এসি রয়েছে"
                   value={roomNotes}
                   onChange={(e) => setRoomNotes(e.target.value)}
                   className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -1356,7 +1297,7 @@ export const RoomManagementView: React.FC<RoomManagementProps> = ({
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    প্রতিটির ওয়াট (Watts) <span className="text-red-500">*</span>
+                    প্রতিটির ওয়াট (Watts) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
