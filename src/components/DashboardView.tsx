@@ -23,7 +23,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onAddProject
 }) => {
   const [activeSubView, setActiveSubView] = useState<
-    'home' | 'create-customer' | 'create-project' | 'auto-calc'
+    'home' | 'create-customer' | 'create-project' | 'video-auto-calc'
   >('home');
 
   // Customer Form State
@@ -36,10 +36,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [totalRooms, setTotalRooms] = useState('5');
   const [selectedRoom, setSelectedRoom] = useState('রুম ১');
 
-  // Auto Electric Calculator State (Watt Input)
-  const [inputWatt, setInputWatt] = useState('2000');
+  // Video Formula Auto Calculator State (Watt Input)
+  const [inputWatt, setInputWatt] = useState('355');
   const [calcResult, setCalcResult] = useState<{
     amp: number;
+    runningAmp: number;
     subCable: string;
     mcb: string;
     rccb: string;
@@ -48,52 +49,57 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     mainMcb: string;
   } | null>(null);
 
-  const handleRunAutoCalc = (e: React.FormEvent) => {
+  // Video Formula Calculation Logic: I = P / (V * 0.9), and Safety 3x margin
+  const handleRunVideoCalc = (e: React.FormEvent) => {
     e.preventDefault();
     const watt = parseFloat(inputWatt) || 0;
+    const voltage = state.settings?.defaultVoltage || 220;
     
-    // Ampere Calculation (I = P / V, considering 220V and 0.85 Power Factor)
-    const currentAmp = Math.round((watt / (220 * 0.85)) * 10) / 10;
+    // Running Ampere with 0.9 Power Factor
+    const currentAmp = Math.round((watt / (voltage * 0.9)) * 100) / 100;
+    // 3x Safety Margin as explained in video
+    const safetyAmp = Math.round(currentAmp * 3 * 10) / 10;
 
-    let subCable = '1.5 RM';
-    let mcb = '10A MCB';
+    let subCable = '1.0 RM তার';
+    let mcb = '6A MCB';
     let rccb = '25A (30mA) RCCB';
     let dpMcb = '16A DP MCB';
-    let mainCable = '2.5 RM';
+    let mainCable = '2.5 RM তার';
     let mainMcb = '20A Main MCB';
 
-    if (watt <= 1500) {
-      subCable = '1.5 RM (লাইট ও ফ্যানের তার)';
+    if (watt <= 400) {
+      subCable = '1.0 RM বা 1.5 RM (সুইচবোর্ড থেকে বাতি/ফ্যান)';
+      mcb = '6A MCB';
+      rccb = '25A RCCB';
+      dpMcb = '16A DP MCB';
+      mainCable = '2.5 RM মেইন তার';
+      mainMcb = '16A Main MCB';
+    } else if (watt <= 1500) {
+      subCable = '1.5 RM (রুমের লাইটিং ও ছোট সকেট লাইন)';
       mcb = '10A MCB';
       rccb = '25A RCCB';
       dpMcb = '16A DP MCB';
-      mainCable = '2.5 RM তার';
-      mainMcb = '16A Main MCB';
+      mainCable = '2.5 RM মেইন তার';
+      mainMcb = '20A Main MCB';
     } else if (watt <= 3500) {
       subCable = '2.5 RM (পাওয়ার ও ফ্রিজ লাইন)';
       mcb = '16A MCB';
       rccb = '40A RCCB';
       dpMcb = '32A DP MCB';
-      mainCable = '4.0 RM তার';
+      mainCable = '4.0 RM মেইন তার';
       mainMcb = '32A Main MCB';
-    } else if (watt <= 7000) {
-      subCable = '4.0 RM (এসি বা হেভি লোড)';
-      mcb = '20A MCB';
-      rccb = '40A RCCB';
-      dpMcb = '40A DP MCB';
-      mainCable = '6.0 RM তার';
-      mainMcb = '40A Main MCB';
     } else {
-      subCable = '6.0 RM বা তার বেশি (সাব-মেইন লাইন)';
-      mcb = '32A MCB';
-      rccb = '63A RCCB';
-      dpMcb = '63A DP MCB';
-      mainCable = '10 RM (বা তার বেশি) মেইন তার';
-      mainMcb = '63A Main MCB';
+      subCable = '4.0 RM বা তার বেশি (এসি ও হেভি লোড)';
+      mcb = '20A/32A MCB';
+      rccb = '40A/63A RCCB';
+      dpMcb = '40/63A DP MCB';
+      mainCable = '6.0 RM মেইন তার';
+      mainMcb = '40A/63A Main MCB';
     }
 
     setCalcResult({
       amp: currentAmp,
+      runningAmp: safetyAmp,
       subCable,
       mcb,
       rccb,
@@ -143,7 +149,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       address: 'ঢাকা',
       phase: '1-Phase (220V)',
       voltage: 220,
-      powerFactor: 0.85,
+      powerFactor: 0.9,
       diversityFactor: 0.8,
       status: 'চলমান',
       rooms: [],
@@ -251,9 +257,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
             </div>
 
-            {/* Box 3: Master Auto Electric Calculator (Watt -> Wire, MCB, RCCB, DP, Main) */}
+            {/* Box 3: Video Formula Auto Calculator */}
             <div
-              onClick={() => setActiveSubView('auto-calc')}
+              onClick={() => setActiveSubView('video-auto-calc')}
               className="p-5 rounded-3xl bg-slate-900 border border-sky-500/30 hover:border-sky-500 shadow-xl cursor-pointer transition-all hover:scale-[1.02] group space-y-3 flex flex-col justify-between sm:col-span-2"
             >
               <div className="w-10 h-10 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center font-black">
@@ -261,14 +267,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
               <div>
                 <h3 className="text-xs sm:text-sm font-black text-white group-hover:text-sky-400 transition-colors">
-                  ⚡ অটো ইলেকট্রিক্যাল লোড ও মেটেরিয়াল ক্যালকুলেটর
+                  ⚡ ভিডিওর ফর্মুলা অনুযায়ী অটো তার ও ব্রেকার ক্যালকুলেটর
                 </h3>
                 <p className="text-[10px] text-slate-400 mt-1">
-                  মোট ওয়াট (Watt) দিলেই অটো হিসাব করবে: তারের RM, MCB, RCCB, DP MCB, মেইন তার ও মেইন MCB!
+                  মোট ওয়াট ও পাওয়ার ফ্যাক্টর (0.9) হিসাব করে সঠিক RM তার, MCB, RCCB, DP MCB ও মেইন তার নির্ণয় করুন।
                 </p>
               </div>
               <div className="flex items-center gap-1 text-[11px] font-bold text-sky-400 pt-1">
-                <span>হিসাবে ঢুকুন</span>
+                <span>ক্যালকুলেটরে ঢুকুন</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
@@ -333,35 +339,44 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       )}
 
-      {/* SUB VIEW: MASTER AUTO ELECTRIC CALCULATOR */}
-      {activeSubView === 'auto-calc' && (
+      {/* SUB VIEW: VIDEO FORMULA AUTO CALCULATOR */}
+      {activeSubView === 'video-auto-calc' && (
         <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-5 animate-in fade-in">
           <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <h2 className="text-sm font-black text-sky-400">⚡ অটো ইলেকট্রিক্যাল লোড ক্যালকুলেটর</h2>
+            <h2 className="text-sm font-black text-sky-400">⚡ অটো তার ও ব্রেকার ক্যালকুলেটর (ভিডিও ফর্মুলা)</h2>
             <button onClick={() => setActiveSubView('home')} className="text-xs font-bold text-slate-400 hover:text-white px-3 py-1 rounded-xl bg-slate-800">← ফিরে যান</button>
           </div>
 
-          <form onSubmit={handleRunAutoCalc} className="space-y-4">
+          <form onSubmit={handleRunVideoCalc} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1">মোট ওয়াট (Total Watt) লিখুন:</label>
               <input 
                 type="number" 
                 value={inputWatt} 
                 onChange={(e) => setInputWatt(e.target.value)} 
-                placeholder="যেমন: 3000" 
+                placeholder="যেমন: 355" 
                 className="w-full px-4 py-3 text-xs font-bold rounded-2xl border border-slate-700 bg-slate-950 text-white focus:outline-none focus:ring-2 focus:ring-sky-500" 
               />
+              <p className="text-[10px] text-slate-400 mt-1">
+                * সিস্টেম ভোল্টেজ: {state.settings?.defaultVoltage || 220}V এবং পাওয়ার ফ্যাক্টর: 0.9 ধরা হয়েছে।
+              </p>
             </div>
             <button type="submit" className="w-full py-3 rounded-2xl bg-sky-500 text-slate-950 font-black text-xs shadow-lg shadow-sky-500/20">
-              অটো হিসাব করুন
+              হিসাব করুন
             </button>
           </form>
 
           {calcResult && (
             <div className="p-4 rounded-2xl bg-slate-950 border border-sky-500/40 space-y-3 text-xs">
-              <div className="text-center pb-2 border-b border-slate-800">
-                <span className="text-slate-400">মোট কারেন্ট লোড: </span>
-                <span className="text-amber-400 font-black text-sm">{calcResult.amp} অ্যাম্পিয়ার (Amp)</span>
+              <div className="text-center pb-2 border-b border-slate-800 space-y-1">
+                <div>
+                  <span className="text-slate-400">রানিং কারেন্ট (I): </span>
+                  <span className="text-amber-400 font-black text-sm">{calcResult.amp} A</span>
+                </div>
+                <div>
+                  <span className="text-slate-400">নিরাপদ সেফটি মার্জিন (৩ গুণ): </span>
+                  <span className="text-emerald-400 font-black text-sm">{calcResult.runningAmp} A</span>
+                </div>
               </div>
 
               <div className="space-y-2">
