@@ -7,7 +7,7 @@ export interface CalculationResult {
   totalKVA: number;
   effectiveWattsWithDiversity: number;
   operatingCurrentA: number;
-  designCurrentA: number; // Current with 1.25 safety factor
+  designCurrentA: number; // Current with safety factor
   voltage: number;
   isThreePhase: boolean;
   powerFactor: number;
@@ -37,14 +37,14 @@ export interface CableCalculationInput {
   diversityFactor?: number;
   lengthMeters: number;
   installationMethod: 'কন্ডুইট (Conduit in Wall)' | 'সারফেস (Surface / Clipped)' | 'ট্রে (Cable Tray)';
-  ambientTempC?: number; // e.g. 30, 35, 40, 45
+  ambientTempC?: number;
   conductorType?: 'Copper (তামা)' | 'Aluminium (অ্যালুমিনিয়াম)';
   isMotorOrCompressor?: boolean;
   hasWetAreaOrGeyser?: boolean;
 }
 
 /**
- * Calculate electrical parameters with engineering rigor
+ * Calculate electrical parameters with strict engineering standards and safety minimums
  */
 export function calculateElectricalLoad(input: CableCalculationInput): CalculationResult {
   const {
@@ -77,28 +77,26 @@ export function calculateElectricalLoad(input: CableCalculationInput): Calculati
   // 1. Operating Current calculation
   let operatingCurrentA = 0;
   if (isThreePhase) {
-    // I = P / (sqrt(3) * V_L * PF)
     const sqrt3 = 1.73205;
     operatingCurrentA = effectiveWattsWithDiversity / (sqrt3 * safeVoltage * effectivePF);
     formulaSteps.push(
       `থ্রি ফেজ কারেন্ট: I = P ÷ (√৩ × V × PF) = ${effectiveWattsWithDiversity.toFixed(0)}W ÷ (১.৭৩২ × ${safeVoltage}V × ${effectivePF}) = ${operatingCurrentA.toFixed(2)} অ্যাম্পিয়ার প্রতি ফেজে।`
     );
   } else {
-    // I = P / (V * PF)
     operatingCurrentA = effectiveWattsWithDiversity / (safeVoltage * effectivePF);
     formulaSteps.push(
       `সিঙ্গেল ফেজ কারেন্ট: I = P ÷ (V × PF) = ${effectiveWattsWithDiversity.toFixed(0)}W ÷ (${safeVoltage}V × ${effectivePF}) = ${operatingCurrentA.toFixed(2)} অ্যাম্পিয়ার।`
     );
   }
 
-  // 2. Continuous load safety factor (125% as per NEC / BNBC code)
+  // 2. Continuous load safety factor (125% - 135% as per standard rules)
   const safetyMultiplier = isMotorOrCompressor ? 1.35 : 1.25;
   const designCurrentA = operatingCurrentA * safetyMultiplier;
   formulaSteps.push(
     `ডিজাইন ও সেফটি কারেন্ট (১২৫% - ১৩৫% মার্জিন): ${operatingCurrentA.toFixed(2)}A × ${safetyMultiplier} = ${designCurrentA.toFixed(2)} অ্যাম্পিয়ার।`
   );
 
-  // 3. Ambient temperature correction factor (approximate)
+  // 3. Temperature derating factor
   let tempDerating = 1.0;
   if (ambientTempC >= 40) tempDerating = 0.87;
   else if (ambientTempC >= 35) tempDerating = 0.94;
@@ -115,8 +113,6 @@ export function calculateElectricalLoad(input: CableCalculationInput): Calculati
         : cable.conduitCurrentCapacityA;
     const deratedCapacity = baseCapacity * tempDerating;
 
-    // Check voltage drop for this cable at lengthMeters
-    // VD = (mV/A/m * I * L) / 1000 in Volts
     const dropV = (cable.voltageDropMvPerAmpMeter * operatingCurrentA * lengthMeters) / 1000;
     const dropPct = (dropV / safeVoltage) * 100;
 
@@ -126,13 +122,39 @@ export function calculateElectricalLoad(input: CableCalculationInput): Calculati
     }
   }
 
-  // If no cable found with <=3.5% drop, select the highest available
-  if (selectedCable === availableCables[0] && designCurrentA > selectedCable.conduitCurrentCapacityA) {
-    // Try to find any cable that carries the current
+  // ENFORCE ENGINEERING SAFETY MINIMUMS BASED ON TOTAL LOAD (Fixing 1.5mm issue for heavy loads)
+  // - Up to 1300W: min 1.5 mm²
+  // - 1300W to 2000W: min 2.5 mm²
+  // - 2000W to 4000W: min 4.0 mm²
+  // - Above 4000W: min 6.0 mm² or 10 mm²
+  let minRequiredSizeMm2 = 1.5;
+  if (effectiveWattsWithDiversity > 4000) {
+    minRequiredSizeMm2 = 6.0;
+  } else if (effectiveWattsWithDiversity > 2000) {
+    minRequiredSizeMm2 = 4.0;
+  } else if (effectiveWattsWithDiversity > 1300) {
+    minRequiredSizeMm2 = 2.5;
+  }
+
+  const currentSelectedSizeNum = parseFloat(selectedCable.sizeMm2);
+  if (currentSelectedSizeNum < minRequiredSizeMm2) {
+    const forcedCable = availableCables.find(c => parseFloat(c.sizeMm2) >= minRequiredSizeMm2);
+    if (forcedCable) {
+      selectedCable = forcedCable;
+    }
+  }
+
+  // If design current exceeds selected cable capacity, pick higher
+  const currentCap =
+    installationMethod === 'সারফেস (Surface / Clipped)'
+      ? selectedCable.openAirCurrentCapacityA
+      : selectedCable.conduitCurrentCapacityA;
+
+  if (designCurrentA > currentCap * tempDerating) {
     const capable = availableCables.find(
-      (c) => c.conduitCurrentCapacityA * tempDerating >= designCurrentA
+      (c) => (installationMethod === 'সারফেস (Surface / Clipped)' ? c.openAirCurrentCapacityA : c.conduitCurrentCapacityA) * tempDerating >= designCurrentA
     );
-    selectedCable = capable || availableCables[availableCables.length - 1];
+    if (capable) selectedCable = capable;
   }
 
   // Calculate final voltage drop with selected cable
@@ -147,32 +169,29 @@ export function calculateElectricalLoad(input: CableCalculationInput): Calculati
 
   if (voltageDropPercentage > 3.0 && voltageDropPercentage <= 5.0) {
     warnings.push(
-      `সতর্কতা: ভোল্টেজ ড্রপ ${voltageDropPercentage.toFixed(2)}% হয়েছে, যা ৩% স্ট্যান্ডার্ডের বেশি কিন্তু ৫% সীমার ভেতর। ভালো কর্মক্ষমতার জন্য এক সাইজ মোটা তার ব্যবহার বিবেচনা করুন।`
+      `সতর্কতা: ভোল্টেজ ড্রপ ${voltageDropPercentage.toFixed(2)}% হয়েছে, যা ৩% স্ট্যান্ডার্ডের বেশি কিন্তু ৫% সীমার ভেতর।`
     );
   } else if (voltageDropPercentage > 5.0) {
     warnings.push(
-      `বিপদজনক সতর্কতা: তারের দৈর্ঘ্য বেশি হওয়ায় ভোল্টেজ ড্রপ ${voltageDropPercentage.toFixed(2)}% ছাড়িয়ে গেছে! এসি, মোটর বা ফ্রিজ নষ্ট হওয়ার ঝুঁকি রয়েছে। অবশ্যই তারের সাইজ বৃদ্ধি করুন।`
+      `বিপদজনক সতর্কতা: তারের দৈর্ঘ্য বেশি হওয়ায় ভোল্টেজ ড্রপ ${voltageDropPercentage.toFixed(2)}% ছাড়িয়ে গেছে! তারের সাইজ বৃদ্ধি করুন।`
     );
-    // Find next cable up
     const currIdx = availableCables.findIndex((c) => c.sizeMm2 === selectedCable.sizeMm2);
     if (currIdx < availableCables.length - 1) {
       alternativeCable = availableCables[currIdx + 1];
     }
   }
 
-  // 5. Breaker Selection
-  // Standard breaker ratings: 6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125, 160, 200
-  const standardRatings = [6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250];
-  let recommendedBreakerRatingA = 6;
+  // 5. Breaker Selection matching market ratings (10A, 16A, 20A, 25A, 32A, 40A, 50A, 63A)
+  const standardRatings = [6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100];
+  let recommendedBreakerRatingA = 10;
 
   for (const rating of standardRatings) {
-    if (rating >= operatingCurrentA) {
+    if (rating >= designCurrentA) {
       recommendedBreakerRatingA = rating;
       break;
     }
   }
 
-  // Protection coordination check: Breaker rating must NOT exceed cable current capacity!
   const cableCapacity =
     installationMethod === 'সারফেস (Surface / Clipped)'
       ? selectedCable.openAirCurrentCapacityA
@@ -180,15 +199,13 @@ export function calculateElectricalLoad(input: CableCalculationInput): Calculati
 
   if (recommendedBreakerRatingA > cableCapacity) {
     warnings.push(
-      `গুরুত্বপূর্ণ নিরাপত্তা ত্রুটি: নির্বাচিত ব্রেকার (${recommendedBreakerRatingA}A) তারের বহনক্ষমতা (${cableCapacity}A) চেয়ে বড়! ব্রেকার ট্রিপ করার আগেই তার পুড়ে অগ্নিকাণ্ড ঘটতে পারে।`
+      `নিরাপত্তা ত্রুটি: নির্বাচিত ব্রেকার (${recommendedBreakerRatingA}A) তারের বহনক্ষমতা (${cableCapacity}A) চেয়ে বড়!`
     );
   }
 
-  // Curve selection
   const recommendedBreakerCurve = isMotorOrCompressor ? 'Curve C / D' : 'Curve C';
   const recommendedBreakerType = isThreePhase ? 'TP MCB / MCCB' : 'SP / DP MCB';
 
-  // Residual current (RCCB) check
   const recommendedRccbRequired = hasWetAreaOrGeyser || isMotorOrCompressor || totalWatts > 2000;
   const recommendedRccbRating = recommendedRccbRequired
     ? `${recommendedBreakerRatingA >= 40 ? 63 : 40}A DP, 30mA ট্রিপ সেনসিটিভিটি`
@@ -199,7 +216,7 @@ export function calculateElectricalLoad(input: CableCalculationInput): Calculati
   }
 
   if (isMotorOrCompressor) {
-    safetyNotes.push('মোটর বা কম্প্রেসারে স্টার্টিং কারেন্ট বহুগুণ থাকে, তাই Curve C বা Curve D ব্রেকার নির্বাচন করা হয়েছে।');
+    safetyNotes.push('মোটর বা কম্প্রেসারে স্টার্টিং কারেন্ট বেশি থাকায় Curve C ব্রেকার নির্বাচন করা হয়েছে।');
   }
 
   safetyNotes.push(
