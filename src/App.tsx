@@ -54,21 +54,8 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Safe Mobile Capacitor & Browser Back Button Handler
+  // Safe Browser & History Back Button Handler (Build Safe)
   useEffect(() => {
-    let capListener: any;
-    import('@capacitor/app').then(({ App }) => {
-      capListener = App.addListener('backButton', () => {
-        if (currentTab !== 'dashboard') {
-          setCurrentTab('dashboard');
-        } else {
-          setExitConfirmOpen(true);
-        }
-      });
-    }).catch(() => {
-      // Fallback for web browser
-    });
-
     const handlePopState = (event: PopStateEvent) => {
       event.preventDefault();
       if (currentTab !== 'dashboard') {
@@ -85,9 +72,6 @@ export default function App() {
 
     return () => {
       window.removeEventListener('popstate', handlePopState);
-      if (capListener) {
-        capListener.remove();
-      }
     };
   }, [currentTab]);
 
@@ -247,7 +231,7 @@ export default function App() {
 
   const totalRooms = state.projects.reduce((sum, p) => sum + p.rooms.length, 0);
 
-  // PREMIER SPLASH SCREEN (Replaces Black/Blank startup screen)
+  // PREMIER SPLASH SCREEN
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-slate-950 flex flex-col items-center justify-center z-50 animate-in fade-in duration-300 select-none">
@@ -433,13 +417,7 @@ export default function App() {
                 না
               </button>
               <button
-                onClick={() => {
-                  import('@capacitor/app').then(({ App }) => {
-                    App.exitApp();
-                  }).catch(() => {
-                    window.close();
-                  });
-                }}
+                onClick={() => window.close()}
                 className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md transition-all"
               >
                 হ্যাঁ
