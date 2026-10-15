@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { App as CapacitorApp } from '@capacitor/app';
 import { AppState, Customer, Project, Room } from './types';
 import { getInitialState, saveStateToStorage, recalculateProject, recalculateRoom } from './utils/storage';
 import { Navbar } from './components/Navbar';
@@ -44,18 +43,8 @@ export default function App() {
   // APK & Phone Install Guide Modal state
   const [apkModalOpen, setApkModalOpen] = useState(false);
 
-  // Android & Browser Back Button Handler
+  // Safe Browser & History Back Button Handler (GitHub Build Safe)
   useEffect(() => {
-    // 1. Capacitor Android Hardware Back Button Listener
-    const handleCapacitorBack = CapacitorApp.addListener('backButton', () => {
-      if (currentTab !== 'dashboard') {
-        setCurrentTab('dashboard');
-      } else {
-        setExitConfirmOpen(true);
-      }
-    });
-
-    // 2. Browser Back Button / History Handler
     const handlePopState = (event: PopStateEvent) => {
       event.preventDefault();
       if (currentTab !== 'dashboard') {
@@ -71,7 +60,6 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
 
     return () => {
-      handleCapacitorBack.then(listener => listener.remove());
       window.removeEventListener('popstate', handlePopState);
     };
   }, [currentTab]);
@@ -245,7 +233,6 @@ export default function App() {
         activeProjectId={state.activeProjectId}
         setActiveProjectId={handleSelectProject}
         onOpenQuickAction={handleOpenQuickAction}
-        onOpenApkGuide={() => setApkModalOpen(true)}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
       />
