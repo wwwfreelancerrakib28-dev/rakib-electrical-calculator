@@ -1,5 +1,6 @@
 import React from 'react';
 import { 
+  Home,
   Zap, 
   BookOpen, 
   DollarSign, 
@@ -36,43 +37,47 @@ export const Sidebar: React.FC<SidebarProps> = ({
   mobileMenuOpen,
   setMobileMenuOpen,
 }) => {
-  // ড্যাশবোর্ড ও রুম তৈরি বাদ দিয়ে বাকি ৫টি কার্যকরী ট্যাব
   const menuItems: { id: NavTab; label: string; icon: React.ReactNode; num: string }[] = [
+    { 
+      id: 'dashboard', 
+      label: 'ড্যাশবোর্ড (হোম)', 
+      icon: <Home className="w-4 h-4" />, 
+      num: '১.' 
+    },
     { 
       id: 'load-calculator', 
       label: 'অটোমেটিক লোড ক্যালকুলেটর', 
       icon: <Zap className="w-4 h-4" />, 
-      num: '১.' 
+      num: '২.' 
     },
     { 
       id: 'knowledge', 
       label: 'ইলেকট্রিক্যাল তথ্যভান্ডার', 
       icon: <BookOpen className="w-4 h-4" />, 
-      num: '২.' 
+      num: '৩.' 
     },
     { 
       id: 'billing', 
       label: 'কাজের খরচ ও বিল', 
       icon: <DollarSign className="w-4 h-4" />, 
-      num: '৩.' 
+      num: '৪.' 
     },
     { 
       id: 'reports', 
       label: 'রিপোর্ট ও PDF', 
       icon: <FileText className="w-4 h-4" />, 
-      num: '৪.' 
+      num: '৫.' 
     },
     { 
       id: 'settings', 
       label: 'সেটিংস ও ব্যাকআপ', 
       icon: <Settings className="w-4 h-4" />, 
-      num: '৫.' 
+      num: '৬.' 
     },
   ];
 
   return (
     <>
-      {/* Mobile Backdrop */}
       {mobileMenuOpen && (
         <div 
           onClick={() => setMobileMenuOpen(false)}
@@ -80,14 +85,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         />
       )}
 
-      {/* Sidebar Container */}
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-50
         w-72 bg-slate-900 border-r border-slate-800
         flex flex-col transition-transform duration-300 ease-in-out
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        {/* Sidebar Header */}
         <div className="p-5 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-black shadow-lg shadow-amber-500/20">
@@ -95,7 +98,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <div>
               <h2 className="text-sm font-black text-white tracking-tight">মেইন মেনু</h2>
-              <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">৫টি প্রধান বিভাগ</p>
+              <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">প্রধান বিভাগসমূহ</p>
             </div>
           </div>
           <button 
@@ -106,7 +109,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* Navigation Menu List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-1.5">
           {menuItems.map((item) => {
             const isActive = currentTab === item.id;
@@ -137,7 +139,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </div>
 
-        {/* Sidebar Footer Info */}
         <div className="p-4 m-4 rounded-2xl bg-slate-800/50 border border-slate-700/60 text-center space-y-1">
           <p className="text-[11px] font-bold text-slate-300">ইলেকট্রিক্যাল ক্যালকুলেটর</p>
           <p className="text-[10px] text-slate-500">ভার্সন ১.০.০</p>
