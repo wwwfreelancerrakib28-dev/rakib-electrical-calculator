@@ -9,11 +9,15 @@ import {
   HelpCircle,
   Building2,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Plus,
+  Trash2,
+  Edit2
 } from 'lucide-react';
-import { Project } from '../types';
+import { Project, DeviceItem } from '../types';
 import { calculateElectricalLoad } from '../utils/electricalCalculations';
 import { formatTaka, formatWatts, formatAmps } from '../utils/numberFormat';
+import { DEFAULT_DEVICES } from '../data/initialData';
 
 interface LoadCalculatorProps {
   activeProject: Project | null;
@@ -24,8 +28,29 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
   activeProject,
   onNavigateTo
 }) => {
-  const [loadWatts, setLoadWatts] = useState<number>(3500);
-  const [voltage, setVoltage] = useState<number>(220);
+  // Section or Room Name input
+  const [sectionName, setSectionName] = useState<string>('মেইন রুম / সম্পূর্ণ বাড়ি');
+  
+  // Interactive Devices List for Calculator
+  const [calculatorDevices, setCalculatorDevices] = useState<Array<{
+    id: string;
+    name: string;
+    watts: number;
+    qty: number;
+  }>>([
+    { id: '1', name: 'লাইট (Light)', watts: 15, qty: 2 },
+    { id: '2', name: 'ফ্যান (Fan)', watts: 75, qty: 1 },
+    { id: '3', name: 'রাইস কুকার (Rice Cooker)', watts: 1000, qty: 0 },
+    { id: '4', name: 'ফ্রিজ (Refrigerator)', watts: 250, qty: 0 },
+    { id: '5', name: 'টিভি (TV)', watts: 120, qty: 0 }
+  ]);
+
+  // Edit Modal State for specific chip/item
+  const [editingItem, setEditingItem] = useState<{ id: string; name: string; watts: number; qty: number } | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+
+  // Voltage, Phase & Safety settings
+  const [voltage, setVoltage] = useState<number>(activeProject?.voltage || 220);
   const [isThreePhase, setIsThreePhase] = useState<boolean>(false);
   const [powerFactor, setPowerFactor] = useState<number>(0.85);
   const [diversityFactor, setDiversityFactor] = useState<number>(0.85);
@@ -33,27 +58,19 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
   const [isMotorOrCompressor, setIsMotorOrCompressor] = useState<boolean>(false);
   const [hasWetArea, setHasWetArea] = useState<boolean>(false);
 
+  // Calculate total watts from active items
+  const totalCalculatedWatts = calculatorDevices.reduce((sum, d) => sum + (d.watts * d.qty), 0);
+
   // Sync from active project
   const handleSyncFromProject = () => {
     if (!activeProject) return;
-    const projectWatts = activeProject.rooms.reduce((sum, r) => sum + r.totalWatts, 0);
-    setLoadWatts(projectWatts > 0 ? projectWatts : 3500);
     setVoltage(activeProject.voltage || 220);
-    setIsThreePhase(activeProject.phase.includes('3-Phase'));
+    setIsThreePhase(activeProject.phase?.includes('3-Phase') || false);
     setPowerFactor(activeProject.powerFactor || 0.85);
-    setDiversityFactor(activeProject.diversityFactor || 0.8);
-
-    // check if any room is bathroom or has AC
-    const hasBath = activeProject.rooms.some((r) => r.type === 'বাথরুম' || r.name.includes('বাথরুম'));
-    const hasMotor = activeProject.rooms.some((r) =>
-      r.devices.some((d) => d.isHeavyLoad || d.name.includes('এসি') || d.name.includes('মোটর'))
-    );
-    setHasWetArea(hasBath);
-    setIsMotorOrCompressor(hasMotor);
   };
 
   const result = calculateElectricalLoad({
-    loadWatts,
+    loadWatts: totalCalculatedWatts > 0 ? totalCalculatedWatts : 100,
     voltage,
     isThreePhase,
     powerFactor,
@@ -64,336 +81,315 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
     hasWetAreaOrGeyser: hasWetArea
   });
 
+  const handleQtyChange = (id: string, newQty: number) => {
+    setCalculatorDevices(prev => prev.map(d => d.id === id ? { ...d, qty: Math.max(0, newQty) } : d));
+  };
+
+  const handleWattsChange = (id: string, newWatts: number) => {
+    setCalculatorDevices(prev => prev.map(d => d.id === id ? { ...d, watts: Math.max(0, newWatts) } : d));
+  };
+
+  const openEditModal = (item: { id: string; name: string; watts: number; qty: number }) => {
+    setEditingItem({ ...item });
+    setEditModalOpen(true);
+  };
+
+  const handleSaveEditedItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingItem) return;
+    setCalculatorDevices(prev => prev.map(d => d.id === editingItem.id ? editingItem : d));
+    setEditModalOpen(false);
+    setEditingItem(null);
+  };
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-300 max-w-2xl mx-auto pb-12">
       
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div>
-          <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Zap className="w-5 h-5 text-amber-500" />
-            <span>অটোমেটিক লোড ক্যালকুলেটর (Electrical Load Calculator)</span>
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            ওয়াট, কারেন্ট (অ্যাম্পিয়ার), পাওয়ার ফ্যাক্টর ও ডাইভারসিটি ফ্যাক্টরের আন্তর্জাতিক প্রকৌশল হিসাব
-          </p>
+      {/* Top Header Card (Matching User Screenshot style) */}
+      <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-center space-y-2">
+        <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-500 flex items-center justify-center mx-auto">
+          <Zap className="w-5 h-5 fill-amber-500" />
         </div>
-
-        {activeProject && (
-          <button
-            onClick={handleSyncFromProject}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-900/60 text-amber-900 dark:text-amber-300 font-bold text-xs hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
-          >
-            <Building2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span>"{activeProject.name}" প্রজেক্ট লোড লোড করুন</span>
-          </button>
-        )}
+        <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+          ইলেকট্রিক্যাল ওয়্যারিং ও লোড ক্যালকুলেটর
+        </h1>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+          অ্যাপ্লায়েন্সের সংখ্যা ও ওয়াট হিসাব করে আরএম (RM) ও সার্কিট প্রটেকশন (MCB/RCCB) নির্ণয় করুন।
+        </p>
       </div>
 
-      {/* Main Grid: Inputs vs Calculation Output */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      {/* COMPACT CHIPS BADGES & QUICK EDIT BAR (Requested Feature) */}
+      <div className="bg-amber-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-amber-200 dark:border-amber-900/50 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+            <span>নির্বাচিত লোডসমূহ (পেন্সিল আইকনে ক্লিক করে এডিট করুন):</span>
+          </span>
+          <span className="text-xs font-bold text-amber-600 font-mono">
+            মোট: {totalCalculatedWatts} W
+          </span>
+        </div>
         
-        {/* Left Inputs (5 Cols) */}
-        <div className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4">
-          <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <Calculator className="w-4 h-4 text-amber-500" />
-            <span>ইনপুট প্যারামিটারসমূহ</span>
-          </h2>
-
-          {/* Phase Toggle */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              বিদ্যুৎ সংযোগের ধরন
-            </label>
-            <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-wrap gap-2">
+          {calculatorDevices.filter(d => d.qty > 0).map((dev) => (
+            <div 
+              key={dev.id}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs text-xs font-semibold text-slate-800 dark:text-slate-200"
+            >
+              <span>{dev.name} ({dev.qty}টি • {dev.watts * dev.qty}W)</span>
               <button
-                type="button"
-                onClick={() => {
-                  setIsThreePhase(false);
-                  setVoltage(220);
-                }}
-                className={`py-2 rounded-xl text-xs font-bold transition-all ${
-                  !isThreePhase
-                    ? 'bg-amber-500 text-slate-950 shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
-                }`}
+                onClick={() => openEditModal(dev)}
+                className="p-1 rounded text-amber-600 hover:bg-amber-50 dark:hover:bg-slate-700 transition-colors"
+                title="এডিট করুন"
               >
-                ১-ফেজ (সিঙ্গেল ফেজ)
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsThreePhase(true);
-                  setVoltage(400);
-                }}
-                className={`py-2 rounded-xl text-xs font-bold transition-all ${
-                  isThreePhase
-                    ? 'bg-amber-500 text-slate-950 shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
-                }`}
-              >
-                ৩-ফেজ (থ্রি ফেজ)
+                <Edit2 className="w-3 h-3" />
               </button>
             </div>
-          </div>
-
-          {/* Load Watts */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                মোট লোড (Watts)
-              </label>
-              <span className="text-xs font-mono text-amber-600 dark:text-amber-400 font-bold">
-                {loadWatts} W = {(loadWatts / 1000).toFixed(2)} kW
-              </span>
-            </div>
-            <input
-              type="number"
-              step="50"
-              min="10"
-              value={loadWatts}
-              onChange={(e) => setLoadWatts(Math.max(0, Number(e.target.value)))}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-            />
-          </div>
-
-          {/* Voltage */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              লাইন ভোল্টেজ (V)
-            </label>
-            <input
-              type="number"
-              value={voltage}
-              onChange={(e) => setVoltage(Number(e.target.value))}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-            />
-          </div>
-
-          {/* Power Factor */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                পাওয়ার ফ্যাক্টর (Power Factor - cos φ)
-              </label>
-              <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
-                {powerFactor}
-              </span>
-            </div>
-            <input
-              type="range"
-              min="0.65"
-              max="1.0"
-              step="0.05"
-              value={powerFactor}
-              onChange={(e) => setPowerFactor(Number(e.target.value))}
-              className="w-full accent-amber-500"
-            />
-            <div className="flex justify-between text-[10px] text-slate-400 mt-0.5">
-              <span>০.৬৫ (দুর্বল মোটর)</span>
-              <span>০.৮৫ (স্ট্যান্ডার্ড বাসা)</span>
-              <span>১.০ (হিটার/রেজিস্ট্যান্স)</span>
-            </div>
-          </div>
-
-          {/* Diversity Factor */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                ডাইভারসিটি ফ্যাক্টর (Diversity Factor)
-              </label>
-              <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
-                {(diversityFactor * 100).toFixed(0)}%
-              </span>
-            </div>
-            <input
-              type="range"
-              min="0.5"
-              max="1.0"
-              step="0.05"
-              value={diversityFactor}
-              onChange={(e) => setDiversityFactor(Number(e.target.value))}
-              className="w-full accent-amber-500"
-            />
-            <p className="text-[10px] text-slate-400 mt-0.5">
-              বাসার সব যন্ত্রপাতি একসাথে চালু থাকে না, তাই ব্যবহারিক লোড ৮০%-৮৫% ধরা হয়।
-            </p>
-          </div>
-
-          {/* Line Length */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              তারের দৈর্ঘ্য (মিটার)
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={lengthMeters}
-              onChange={(e) => setLengthMeters(Number(e.target.value))}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-            />
-          </div>
-
-          {/* Checkboxes */}
-          <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
-              <input
-                type="checkbox"
-                checked={isMotorOrCompressor}
-                onChange={(e) => setIsMotorOrCompressor(e.target.checked)}
-                className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500"
-              />
-              <span>ইন্ডাকশন মোটর / এসি / কম্প্রেসার লোড অন্তর্ভুক্ত</span>
-            </label>
-
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
-              <input
-                type="checkbox"
-                checked={hasWetArea}
-                onChange={(e) => setHasWetArea(e.target.checked)}
-                className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500"
-              />
-              <span>বাথরুম গিজার বা ভেজা স্থান (৩০mA RCCB বাধ্যতামূলক)</span>
-            </label>
-          </div>
+          ))}
+          {calculatorDevices.filter(d => d.qty > 0).length === 0 && (
+            <p className="text-xs text-slate-400 italic">কোনো ডিভাইস সংখ্যা সিলেক্ট করা হয়নি। নিচে পরিমাণ বাড়ান।</p>
+          )}
         </div>
-
-        {/* Right Output Results (7 Cols) */}
-        <div className="lg:col-span-7 space-y-4">
-          
-          {/* Main Calculation Summary Card */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-sm space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div>
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  গণনার ফলাফল
-                </span>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  তড়িৎ প্রবাহ ও লোড বিশ্লেষণ
-                </h3>
-              </div>
-              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{result.status}</span>
-              </span>
-            </div>
-
-            {/* 4 Result Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-3.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/50">
-                <span className="text-[10px] font-semibold text-amber-800 dark:text-amber-400 block">কার্যকর লোড</span>
-                <span className="text-lg font-black text-amber-950 dark:text-amber-200 mt-1 block">
-                  {formatWatts(result.effectiveWattsWithDiversity)}
-                </span>
-                <span className="text-[10px] text-amber-700/80 dark:text-amber-400">
-                  {result.totalKW.toFixed(2)} kW
-                </span>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/50">
-                <span className="text-[10px] font-semibold text-blue-800 dark:text-blue-400 block">কার্যকর কারেন্ট</span>
-                <span className="text-lg font-black text-blue-950 dark:text-blue-200 mt-1 block font-mono">
-                  {formatAmps(result.operatingCurrentA)}
-                </span>
-                <span className="text-[10px] text-blue-700/80 dark:text-blue-400">
-                  {isThreePhase ? 'প্রতি ফেজে' : 'মোট প্রবাহ'}
-                </span>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-900/50">
-                <span className="text-[10px] font-semibold text-purple-800 dark:text-purple-400 block">ডিজাইন কারেন্ট</span>
-                <span className="text-lg font-black text-purple-950 dark:text-purple-200 mt-1 block font-mono">
-                  {formatAmps(result.designCurrentA)}
-                </span>
-                <span className="text-[10px] text-purple-700/80 dark:text-purple-400">
-                  ১২৫% সেফটি মার্জিন
-                </span>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-900/50">
-                <span className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-400 block">ভোল্টেজ ড্রপ</span>
-                <span className="text-lg font-black text-emerald-950 dark:text-emerald-200 mt-1 block font-mono">
-                  {result.voltageDropPercentage.toFixed(2)}%
-                </span>
-                <span className="text-[10px] text-emerald-700/80 dark:text-emerald-400">
-                  ({result.voltageDropVolts.toFixed(1)} V)
-                </span>
-              </div>
-            </div>
-
-            {/* Recommended Cable & Breaker Card */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs">
-              <div>
-                <span className="text-slate-400 block mb-0.5">প্রস্তাবিত কপার তারের সাইজ:</span>
-                <span className="text-sm font-bold text-slate-900 dark:text-white block">
-                  {result.recommendedCable.sizeMm2} ({result.recommendedCable.rmEquivalent})
-                </span>
-                <span className="text-[11px] text-slate-500 mt-0.5 block">
-                  কন্ডুইটে বহনক্ষমতা: {result.recommendedCable.conduitCurrentCapacityA} A
-                </span>
-              </div>
-
-              <div>
-                <span className="text-slate-400 block mb-0.5">প্রস্তাবিত সার্কিট ব্রেকার:</span>
-                <span className="text-sm font-bold text-amber-600 dark:text-amber-400 block">
-                  {result.recommendedBreakerRatingA}A {result.recommendedBreakerType} ({result.recommendedBreakerCurve})
-                </span>
-                <span className="text-[11px] text-slate-500 mt-0.5 block">
-                  আর্থ তার: {result.recommendedEarthWire}
-                </span>
-              </div>
-            </div>
-
-            {/* Warnings and Safety Alerts */}
-            {result.warnings.length > 0 && (
-              <div className="space-y-1.5">
-                {result.warnings.map((w, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs flex items-start gap-2"
-                  >
-                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>{w}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {result.safetyNotes.length > 0 && (
-              <div className="space-y-1.5">
-                {result.safetyNotes.map((note, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-300 text-xs flex items-center gap-2"
-                  >
-                    <Info className="w-4 h-4 shrink-0" />
-                    <span>{note}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Mathematical Step-by-Step Explanation */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-3">
-            <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <HelpCircle className="w-4 h-4 text-amber-500" />
-              <span>হিসাবের প্রকৌশল ব্যাখ্যা ও সূত্র (Calculation Steps)</span>
-            </h3>
-
-            <div className="space-y-2 text-xs font-mono bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-300 leading-relaxed">
-              {result.formulaSteps.map((step, idx) => (
-                <div key={idx} className="flex items-start gap-2">
-                  <span className="text-amber-500 font-bold shrink-0">{idx + 1}.</span>
-                  <span>{step}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-
       </div>
+
+      {/* Section Name Input */}
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-1.5">
+        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+          রুমের নাম বা সেকশন:
+        </label>
+        <input
+          type="text"
+          value={sectionName}
+          onChange={(e) => setSectionName(e.target.value)}
+          className="w-full px-3.5 py-2.5 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500"
+          placeholder="যেমন: রুম ১ বা মাস্টার বেডরুম"
+        />
+      </div>
+
+      {/* Appliances & Load List Cards */}
+      <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <h2 className="text-xs font-black uppercase text-slate-400 tracking-wider">
+          অ্যাপ্লায়েন্স ও লোড তালিকা
+        </h2>
+
+        <div className="space-y-3">
+          {calculatorDevices.map((dev) => (
+            <div 
+              key={dev.id}
+              className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-2.5"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-900 dark:text-white">
+                  {dev.name}
+                </span>
+                <button
+                  onClick={() => openEditModal(dev)}
+                  className="text-[11px] font-bold text-amber-600 hover:underline flex items-center gap-1"
+                >
+                  <Edit2 className="w-3 h-3" /> এডিট
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 mb-1">ওয়াট</label>
+                  <select
+                    value={dev.watts}
+                    onChange={(e) => handleWattsChange(dev.id, Number(e.target.value))}
+                    className="w-full px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                  >
+                    <option value={dev.watts}>{dev.watts} ওয়াট</option>
+                    <option value={15}>১৫ ওয়াট</option>
+                    <option value={20}>২০ ওয়াট</option>
+                    <option value={40}>৪০ ওয়াট</option>
+                    <option value={75}>৭৫ ওয়াট</option>
+                    <option value={100}>১০০ ওয়াট</option>
+                    <option value={250}>২৫০ ওয়াট</option>
+                    <option value={1000}>১০০০ ওয়াট</option>
+                    <option value={1500}>১৫০০ ওয়াট</option>
+                    <option value={1800}>১৮০০ ওয়াট</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 mb-1">সংখ্যা (Qty)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={dev.qty}
+                    onChange={(e) => handleQtyChange(dev.id, Number(e.target.value))}
+                    className="w-full px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Add custom device button */}
+        <button
+          onClick={() => {
+            const name = prompt('নতুন ডিভাইসের নাম লিখুন:');
+            if (!name) return;
+            const w = Number(prompt('ওয়াট লিখুন:', '100')) || 100;
+            setCalculatorDevices(prev => [...prev, { id: `dev-${Date.now()}`, name, watts: w, qty: 1 }]);
+          }}
+          className="w-full py-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95"
+        >
+          <Plus className="w-4 h-4 stroke-[3]" />
+          <span>+ নতুন ডিভাইস যোগ করুন</span>
+        </button>
+      </div>
+
+      {/* Protection Checkbox */}
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3">
+        <h2 className="text-xs font-black uppercase text-slate-400 tracking-wider pb-2 border-b border-slate-100 dark:border-slate-800">
+          সুরক্ষা ডিভাইস (Protection)
+        </h2>
+
+        <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
+          <input
+            type="checkbox"
+            checked={hasWetArea}
+            onChange={(e) => setHasWetArea(e.target.checked)}
+            className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500"
+          />
+          <span>RCCB (Residual Current Circuit Breaker) ব্যবহার করাবেন?</span>
+        </label>
+      </div>
+
+      {/* Calculate Action Button */}
+      <div className="pt-2">
+        <button
+          onClick={() => {
+            const outputEl = document.getElementById('notebook-report-result');
+            if (outputEl) outputEl.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+        >
+          <Calculator className="w-4 h-4" />
+          <span>হিসাব করুন (Calculate)</span>
+        </button>
+      </div>
+
+      {/* NOTEBOOK REPORT OUTPUT (Matching Screenshot) */}
+      <div 
+        id="notebook-report-result"
+        className="bg-[#fffdf5] dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border-2 border-amber-400/80 dark:border-amber-500/60 shadow-xl space-y-4"
+      >
+        <div className="flex items-center justify-between pb-3 border-b border-amber-200 dark:border-slate-800">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📖</span>
+            <h3 className="text-sm font-black text-slate-900 dark:text-white">
+              নোটবুক রিপোর্ট
+            </h3>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-500 text-slate-950 shadow-xs">
+            যাচাইকৃত
+          </span>
+        </div>
+
+        <div>
+          <span className="text-[11px] text-slate-400 block font-semibold">সেকশন: {sectionName}</span>
+          <div className="space-y-1 mt-2">
+            {calculatorDevices.filter(d => d.qty > 0).map(d => (
+              <div key={d.id} className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
+                <span>{d.name} ({d.qty}টি × {d.watts}W)</span>
+                <span className="font-mono font-bold">{d.qty * d.watts} W</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="pt-3 border-t border-amber-200 dark:border-slate-800 grid grid-cols-2 gap-3">
+          <div className="p-3 rounded-2xl bg-amber-100/60 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-900">
+            <span className="text-[10px] font-bold text-amber-800 dark:text-amber-400 block">মোট ওয়াট:</span>
+            <span className="text-base font-black text-amber-950 dark:text-amber-200 font-mono">
+              {totalCalculatedWatts} ওয়াট
+            </span>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-blue-100/60 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-900">
+            <span className="text-[10px] font-bold text-blue-800 dark:text-blue-400 block">মোট অ্যাম্পিয়ার:</span>
+            <span className="text-base font-black text-blue-950 dark:text-blue-200 font-mono">
+              {result.operatingCurrentA.toFixed(2)} A
+            </span>
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-1.5 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500">তারের সাইজ (RM):</span>
+            <span className="font-black text-emerald-600 dark:text-emerald-400">{result.recommendedCable.sizeMm2}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500">প্রস্তাবিত সার্কিট ব্রেকার (MCB):</span>
+            <span className="font-black text-slate-900 dark:text-white">{result.recommendedBreakerRatingA} Amp MCB</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500">RCCB প্রটেকশন:</span>
+            <span className="font-black text-amber-600 dark:text-amber-400">
+              {hasWetArea ? 'প্রয়োজন: ৩০mA (শকের হাত থেকে রক্ষা)' : 'প্রয়োজন নেই (সাধারণ ঘর)'}
+            </span>
+          </div>
+        </div>
+
+        <p className="text-[10px] text-slate-400 italic text-center leading-relaxed">
+          নোট: এই বৈদ্যুতিক হিসাবটি প্রমিত প্রকৌশল ফর্মুলা, লোড, MCB ও RCCB নির্বাচনে সঠিক মান নিশ্চিত করতে কার্যকর।
+        </p>
+      </div>
+
+      {/* EDIT MODAL FOR POPUP EDITING */}
+      {editModalOpen && editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden p-5 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                ডিভাইস এডিট করুন
+              </h3>
+              <button onClick={() => setEditModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+            </div>
+
+            <form onSubmit={handleSaveEditedItem} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">নাম</label>
+                <input
+                  type="text"
+                  value={editingItem.name}
+                  onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ওয়াট (Watts)</label>
+                <input
+                  type="number"
+                  value={editingItem.watts}
+                  onChange={(e) => setEditingItem({ ...editingItem, watts: Number(e.target.value) })}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">পরিমাণ (Qty)</label>
+                <input
+                  type="number"
+                  value={editingItem.qty}
+                  onChange={(e) => setEditingItem({ ...editingItem, qty: Number(e.target.value) })}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md transition-all mt-2"
+              >
+                সংরক্ষণ করুন (Save)
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );
