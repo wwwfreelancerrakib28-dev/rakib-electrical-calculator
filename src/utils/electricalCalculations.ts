@@ -45,6 +45,7 @@ export interface CableCalculationInput {
 
 /**
  * Calculate electrical parameters with strict engineering standards and safety minimums
+ * Scaled from small room loads to large office/duplex building loads.
  */
 export function calculateElectricalLoad(input: CableCalculationInput): CalculationResult {
   const {
@@ -122,15 +123,21 @@ export function calculateElectricalLoad(input: CableCalculationInput): Calculati
     }
   }
 
-  // ENFORCE ENGINEERING SAFETY MINIMUMS BASED ON TOTAL LOAD (Fixing 1.5mm issue for heavy loads)
-  // - Up to 1300W: min 1.5 mm²
-  // - 1300W to 2000W: min 2.5 mm²
-  // - 2000W to 4000W: min 4.0 mm²
-  // - Above 4000W: min 6.0 mm² or 10 mm²
+  // ENFORCE ENGINEERING SAFETY MINIMUMS BASED ON TOTAL LOAD (Scalable for Small to Large Office/Duplex Loads)
+  // - Up to 1300W: min 1.5 mm²[span_3](start_span)[span_3](end_span)[span_4](start_span)[span_4](end_span)
+  // - 1300W to 2500W: min 2.5 mm²[span_5](start_span)[span_5](end_span)[span_6](start_span)[span_6](end_span)
+  // - 2500W to 4500W: min 4.0 mm²[span_7](start_span)[span_7](end_span)[span_8](start_span)[span_8](end_span)
+  // - 4500W to 8000W: min 6.0 mm²[span_9](start_span)[span_9](end_span)
+  // - 8000W to 14000W: min 10.0 mm²[span_10](start_span)[span_10](end_span)[span_11](start_span)[span_11](end_span)
+  // - Above 14000W: min 16.0 mm²
   let minRequiredSizeMm2 = 1.5;
-  if (effectiveWattsWithDiversity > 4000) {
+  if (effectiveWattsWithDiversity > 14000) {
+    minRequiredSizeMm2 = 16.0;
+  } else if (effectiveWattsWithDiversity > 8000) {
+    minRequiredSizeMm2 = 10.0;
+  } else if (effectiveWattsWithDiversity > 4500) {
     minRequiredSizeMm2 = 6.0;
-  } else if (effectiveWattsWithDiversity > 2000) {
+  } else if (effectiveWattsWithDiversity > 2500) {
     minRequiredSizeMm2 = 4.0;
   } else if (effectiveWattsWithDiversity > 1300) {
     minRequiredSizeMm2 = 2.5;
@@ -181,7 +188,7 @@ export function calculateElectricalLoad(input: CableCalculationInput): Calculati
     }
   }
 
-  // 5. Breaker Selection matching market ratings (10A, 16A, 20A, 25A, 32A, 40A, 50A, 63A)
+  // 5. Breaker Selection matching market ratings (10A, 16A, 20A, 25A, 32A, 40A, 50A, 63A, etc.)[span_12](start_span)[span_12](end_span)
   const standardRatings = [6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100];
   let recommendedBreakerRatingA = 10;
 
@@ -204,7 +211,12 @@ export function calculateElectricalLoad(input: CableCalculationInput): Calculati
   }
 
   const recommendedBreakerCurve = isMotorOrCompressor ? 'Curve C / D' : 'Curve C';
-  const recommendedBreakerType = isThreePhase ? 'TP MCB / MCCB' : 'SP / DP MCB';
+  // If total load is high (>5000W), recommend Main Double Pole MCB matching market standards (e.g. 32A, 40A, 50A, 63A DP)[span_13](start_span)[span_13](end_span)[span_14](start_span)[span_14](end_span)
+  const recommendedBreakerType = isThreePhase 
+    ? 'TP MCB / MCCB' 
+    : totalWatts > 5000 
+      ? `${recommendedBreakerRatingA}A DP Main MCB` 
+      : 'SP / DP MCB';
 
   const recommendedRccbRequired = hasWetAreaOrGeyser || isMotorOrCompressor || totalWatts > 2000;
   const recommendedRccbRating = recommendedRccbRequired
@@ -215,12 +227,12 @@ export function calculateElectricalLoad(input: CableCalculationInput): Calculati
     safetyNotes.push('বাথরুমে গিজার বা ভেজা সার্কিট থাকায় ৩০mA RCCB বা RCBO ব্যবহার করা বাধ্যতামূলক।');
   }
 
-  if (isMotorOrCompressor) {
-    safetyNotes.push('মোটর বা কম্প্রেসারে স্টার্টিং কারেন্ট বেশি থাকায় Curve C ব্রেকার নির্বাচন করা হয়েছে।');
+  if (totalWatts > 8000) {
+    safetyNotes.push(`বড় অফিস বা ডুপ্লেক্স বাড়ির জন্য মিটার থেকে মেইন বোর্ডে অন্তত ${selectedCable.sizeMm2} ক্যাবল এবং ${recommendedBreakerRatingA}A ডাবল পোল (DP) মেইন MCB ব্যবহার করুন[span_15](start_span)[span_15](end_span)[span_16](start_span)[span_16](end_span)[span_17](start_span)[span_17](end_span)[span_18](start_span)[span_18](end_span)।`);
   }
 
   safetyNotes.push(
-    `আর্থিং কন্ডাক্টর হিসেবে ন্যূনতম ${selectedCable.recommendedEarthWire} তামার তার সংযুক্ত করতে হবে।`
+    `আর্থিং কন্ডাক্টর হিসেবে ন্যূনতম ${selectedCable.recommendedEarthWire} তামার তার সংযুক্ত করতে হবে[span_19](start_span)[span_19](end_span)[span_20](start_span)[span_20](end_span)।`
   );
 
   return {
