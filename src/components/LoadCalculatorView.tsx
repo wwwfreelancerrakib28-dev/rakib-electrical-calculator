@@ -5,8 +5,7 @@ import {
   Plus, 
   Trash2, 
   Edit2, 
-  X,
-  Check
+  X
 } from 'lucide-react';
 import { Project } from '../types';
 import { calculateElectricalLoad } from '../utils/electricalCalculations';
@@ -20,10 +19,8 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
   activeProject,
   onNavigateTo
 }) => {
-  // Section or Room Name input
   const [sectionName, setSectionName] = useState<string>('মেইন রুম / সম্পূর্ণ বাড়ি');
   
-  // Interactive Devices List for Calculator (Dropdown style with delete option)
   const [calculatorDevices, setCalculatorDevices] = useState<Array<{
     id: string;
     name: string;
@@ -37,15 +34,12 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
     { id: '5', name: 'টিভি (TV)', watts: 120, qty: 0 }
   ]);
 
-  // Edit Modal State
   const [editingItem, setEditingItem] = useState<{ id: string; name: string; watts: number; qty: number } | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
-  // Calculation Result Modal State (Requested Feature)
   const [resultModalOpen, setResultModalOpen] = useState(false);
   const [showItemizedNotes, setShowItemizedNotes] = useState(false);
 
-  // Settings
   const [voltage, setVoltage] = useState<number>(activeProject?.voltage || 220);
   const [isThreePhase, setIsThreePhase] = useState<boolean>(false);
   const [powerFactor, setPowerFactor] = useState<number>(0.85);
@@ -96,7 +90,6 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
   return (
     <div className="space-y-6 animate-in fade-in duration-300 max-w-2xl mx-auto pb-12">
       
-      {/* Top Header Card */}
       <div className="bg-slate-900 p-5 rounded-3xl border border-amber-500/30 shadow-xl text-center space-y-2 backdrop-blur-xl">
         <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
           <Zap className="w-5 h-5 fill-amber-400" />
@@ -109,7 +102,6 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
         </p>
       </div>
 
-      {/* Section Name Input */}
       <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-md space-y-1.5">
         <label className="block text-xs font-bold text-slate-300">
           রুমের নাম বা সেকশন:
@@ -123,7 +115,6 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
         />
       </div>
 
-      {/* DROPDOWN STYLE APPLIANCES & LOAD LIST WITH EDIT & DELETE */}
       <div className="bg-slate-900 p-5 rounded-3xl border border-slate-800 shadow-xl space-y-4">
         <div className="flex items-center justify-between pb-2 border-b border-slate-800">
           <h2 className="text-xs font-black uppercase text-amber-400 tracking-wider">
@@ -149,7 +140,6 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
                 </span>
               </div>
 
-              {/* Dropdown for Watts & Qty Controls */}
               <div className="flex items-center gap-2">
                 <select
                   value={dev.watts}
@@ -211,7 +201,6 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
         </button>
       </div>
 
-      {/* Protection Checkbox */}
       <div className="bg-slate-900 p-4 rounded-3xl border border-slate-800 space-y-3 shadow-md">
         <h2 className="text-xs font-black uppercase text-slate-400 tracking-wider pb-2 border-b border-slate-800">
           সুরক্ষা ডিভাইস (Protection)
@@ -228,7 +217,6 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
         </label>
       </div>
 
-      {/* CALCULATE BUTTON OPENS NEW FULL SCREEN MODAL */}
       <div className="pt-2">
         <button
           onClick={() => setResultModalOpen(true)}
@@ -239,12 +227,10 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
         </button>
       </div>
 
-      {/* NEW FULL SCREEN CALCULATION RESULT & NOTEBOOK REPORT MODAL */}
       {resultModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-in fade-in">
           <div className="bg-slate-900 border border-amber-500/50 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             
-            {/* Modal Header */}
             <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/80">
               <div className="flex items-center gap-2">
                 <span className="text-lg">📖</span>
@@ -260,14 +246,12 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
               </button>
             </div>
 
-            {/* Modal Body */}
             <div className="p-5 overflow-y-auto space-y-4 flex-1 text-xs">
               <div className="flex items-center justify-between">
                 <span className="text-slate-400 font-semibold">সেকশন: <strong className="text-white">{sectionName}</strong></span>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-slate-950">যাচাইকৃত</span>
               </div>
 
-              {/* TOGGLE BUTTON FOR ITEMIZED NOTES (Requested Feature) */}
               <div className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-amber-400">কোন মাল কয় পিস (তালিকা দেখুন):</span>
@@ -294,7 +278,6 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
                 )}
               </div>
 
-              {/* Totals Grid */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30">
                   <span className="text-[10px] font-bold text-amber-400 block">মোট ওয়াট:</span>
@@ -311,7 +294,6 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
                 </div>
               </div>
 
-              {/* Specs Box */}
               <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400">তারের সাইজ (RM):</span>
@@ -343,7 +325,6 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
         </div>
       )}
 
-      {/* EDIT MODAL FOR POPUP EDITING */}
       {editModalOpen && editingItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/70 backdrop-blur-sm animate-in fade-in">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden p-5 space-y-4">
@@ -370,7 +351,7 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
                 <input
                   type="number"
                   value={editingItem.watts}
-                  onChange={(e) => setEditingItem({ ...editingItem, watts: Number(e.target.value })}
+                  onChange={(e) => setEditingItem({ ...editingItem, watts: Number(e.target.value) })}
                   className="w-full px-3 py-2 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold"
                 />
               </div>
@@ -380,7 +361,7 @@ export const LoadCalculatorView: React.FC<LoadCalculatorProps> = ({
                 <input
                   type="number"
                   value={editingItem.qty}
-                  onChange={(e) => setEditingItem({ ...editingItem, qty: Number(e.target.value })}
+                  onChange={(e) => setEditingItem({ ...editingItem, qty: Number(e.target.value) })}
                   className="w-full px-3 py-2 rounded-xl border border-slate-700 bg-slate-800 text-white font-semibold"
                 />
               </div>
