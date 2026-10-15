@@ -1,30 +1,19 @@
 import React from 'react';
 import {
   LayoutDashboard,
-  Users,
-  Building2,
   Home,
   Zap,
-  Cable,
-  ShieldCheck,
-  Package,
   BookOpen,
   Receipt,
   FileText,
   Settings,
-  X,
-  Sparkles
+  X
 } from 'lucide-react';
 
 export type NavTab =
   | 'dashboard'
-  | 'customers'
-  | 'projects'
   | 'rooms'
   | 'load-calculator'
-  | 'cable-calculator'
-  | 'breaker-calculator'
-  | 'materials'
   | 'knowledge'
   | 'billing'
   | 'reports'
@@ -45,17 +34,12 @@ interface SidebarProps {
 
 export const NAV_ITEMS = [
   { id: 'dashboard' as NavTab, label: '১. ড্যাশবোর্ড', icon: LayoutDashboard },
-  { id: 'customers' as NavTab, label: '২. কাস্টমার ম্যানেজমেন্ট', icon: Users, badgeKey: 'customers' },
-  { id: 'projects' as NavTab, label: '৩. নতুন বাড়ি ও প্রজেক্ট', icon: Building2, badgeKey: 'projects' },
-  { id: 'rooms' as NavTab, label: '৪. রুম তৈরি ও রুমের হিসাব', icon: Home, badgeKey: 'rooms' },
-  { id: 'load-calculator' as NavTab, label: '৫. অটোমেটিক লোড ক্যালকুলেটর', icon: Zap },
-  { id: 'cable-calculator' as NavTab, label: '৬. তার ও কেবল সাইজ ক্যালকুলেটর', icon: Cable },
-  { id: 'breaker-calculator' as NavTab, label: '৭. ব্রেকার ও সুরক্ষা ক্যালকুলেটর', icon: ShieldCheck },
-  { id: 'materials' as NavTab, label: '৮. মালামাল ও এক্সেসরিজ', icon: Package },
-  { id: 'knowledge' as NavTab, label: '৯. ইলেকট্রিক্যাল তথ্যভান্ডার', icon: BookOpen },
-  { id: 'billing' as NavTab, label: '১০. কাজের খরচ ও বিল', icon: Receipt },
-  { id: 'reports' as NavTab, label: '১১. রিপোর্ট ও PDF', icon: FileText },
-  { id: 'settings' as NavTab, label: '১২. সেটিংস ও ব্যাকআপ', icon: Settings },
+  { id: 'rooms' as NavTab, label: '২. রুম তৈরি ও রুমের হিসাব', icon: Home, badgeKey: 'rooms' },
+  { id: 'load-calculator' as NavTab, label: '৩. অটোমেটিক লোড ক্যালকুলেটর', icon: Zap },
+  { id: 'knowledge' as NavTab, label: '৪. ইলেকট্রিক্যাল তথ্যভান্ডার', icon: BookOpen },
+  { id: 'billing' as NavTab, label: '৫. কাজের খরচ ও বিল', icon: Receipt },
+  { id: 'reports' as NavTab, label: '৬. রিপোর্ট ও PDF', icon: FileText },
+  { id: 'settings' as NavTab, label: '৭. সেটিংস ও ব্যাকআপ', icon: Settings },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -63,7 +47,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setCurrentTab,
   mobileMenuOpen,
   setMobileMenuOpen,
-  onOpenApkGuide,
   counts
 }) => {
   const handleSelect = (tab: NavTab) => {
@@ -81,7 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div>
             <div className="text-sm font-bold text-white tracking-wide">মেইন মেনু</div>
-            <div className="text-[11px] text-amber-400">১২টি প্রধান বিভাগ</div>
+            <div className="text-[11px] text-amber-400">৭টি প্রধান বিভাগ</div>
           </div>
         </div>
         <button
@@ -132,29 +115,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           );
         })}
       </nav>
-
-      {/* Pro Badge & Mobile APK Button at bottom */}
-      <div className="p-3 border-t border-slate-800 m-2 rounded-xl bg-gradient-to-r from-slate-800/90 to-amber-950/30 border border-amber-500/20 space-y-2">
-        <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>১০০% অফলাইন কার্যকরী</span>
-        </div>
-        <p className="text-[11px] text-slate-400 leading-relaxed">
-          আপনার ব্রাউজার ও ফোনে স্বয়ংক্রিয়ভাবে সব ডেটা সংরক্ষিত হচ্ছে।
-        </p>
-
-        {onOpenApkGuide && (
-          <button
-            onClick={() => {
-              setMobileMenuOpen(false);
-              onOpenApkGuide();
-            }}
-            className="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow transition-all"
-          >
-            <span>📱 ফোনে অ্যাপ চালান / APK</span>
-          </button>
-        )}
-      </div>
     </div>
   );
 
