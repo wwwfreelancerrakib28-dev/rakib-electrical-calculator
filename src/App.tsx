@@ -54,8 +54,21 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Safe Browser & History Back Button Handler (GitHub Build Safe)
+  // Safe Mobile Capacitor & Browser Back Button Handler
   useEffect(() => {
+    let capListener: any;
+    import('@capacitor/app').then(({ App }) => {
+      capListener = App.addListener('backButton', () => {
+        if (currentTab !== 'dashboard') {
+          setCurrentTab('dashboard');
+        } else {
+          setExitConfirmOpen(true);
+        }
+      });
+    }).catch(() => {
+      // Fallback for web browser
+    });
+
     const handlePopState = (event: PopStateEvent) => {
       event.preventDefault();
       if (currentTab !== 'dashboard') {
@@ -72,6 +85,9 @@ export default function App() {
 
     return () => {
       window.removeEventListener('popstate', handlePopState);
+      if (capListener) {
+        capListener.remove();
+      }
     };
   }, [currentTab]);
 
@@ -417,7 +433,13 @@ export default function App() {
                 না
               </button>
               <button
-                onClick={() => window.close()}
+                onClick={() => {
+                  import('@capacitor/app').then(({ App }) => {
+                    App.exitApp();
+                  }).catch(() => {
+                    window.close();
+                  });
+                }}
                 className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md transition-all"
               >
                 হ্যাঁ
