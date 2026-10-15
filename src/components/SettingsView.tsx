@@ -16,7 +16,7 @@ import {
   Trash2,
   Edit2
 } from 'lucide-react';
-import { AppState, AppSettings } from '../types';
+import { AppState, AppSettings, CatalogDevice } from '../types';
 import { exportDataAsJSON, importDataFromJSON, saveStateToStorage } from '../utils/storage';
 import { SAMPLE_CUSTOMERS, SAMPLE_PROJECTS } from '../data/sampleData';
 
@@ -37,19 +37,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
   const [importStatusMsg, setImportStatusMsg] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
-  // Custom Devices State for Full Control
-  const [customDevices, setCustomDevices] = useState<Array<{ id: string; name: string; watts: number; category: string }>>(
+  // Custom Devices State aligned with CatalogDevice type
+  const [customDevices, setCustomDevices] = useState<CatalogDevice[]>(
     state.customDevices || [
-      { id: '1', name: 'সিলিং ফ্যান', watts: 75, category: 'ফ্যান' },
-      { id: '2', name: 'LED লাইট', watts: 20, category: 'লাইট' },
-      { id: '3', name: 'ফ্রিজ', watts: 250, category: 'অ্যাপ্লায়েন্স' },
-      { id: '4', name: 'এসি (1.5 Ton)', watts: 1800, category: 'এসি' }
+      { id: '1', name: 'সিলিং ফ্যান', defaultWatts: 75, defaultPowerFactor: 0.9, isHeavyLoad: false, category: 'ফ্যান', notes: '' },
+      { id: '2', name: 'LED লাইট', defaultWatts: 20, defaultPowerFactor: 0.9, isHeavyLoad: false, category: 'লাইট', notes: '' },
+      { id: '3', name: 'ফ্রিজ', defaultWatts: 250, defaultPowerFactor: 0.85, isHeavyLoad: false, category: 'অ্যাপ্লায়েন্স', notes: '' },
+      { id: '4', name: 'এসি (1.5 Ton)', defaultWatts: 1800, defaultPowerFactor: 0.85, isHeavyLoad: true, category: 'এসি', notes: '' }
     ]
   );
 
   const [newDeviceName, setNewDeviceName] = useState('');
   const [newDeviceWatts, setNewDeviceWatts] = useState('');
   const [newDeviceCat, setNewDeviceCat] = useState('সাধারণ');
+  const [newDeviceHeavy, setNewDeviceHeavy] = useState(false);
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +61,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     };
     onUpdateState(updatedState);
     saveStateToStorage(updatedState);
-    setSaveSuccessMsg('সেটিংস ও ডিভাইস তালিকা সফলভাবে সংরক্ষিত হয়েছে!');
+    setSaveSuccessMsg('সেটিংস ও ডিভাইস তালিকা সফলভাবে সংরক্ষিত হয়েছে!');
     setTimeout(() => setSaveSuccessMsg(''), 3000);
   };
 
@@ -68,17 +69,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     e.preventDefault();
     if (!newDeviceName || !newDeviceWatts) return;
 
-    const newItem = {
-      id: Date.now().toString(),
+    const newItem: CatalogDevice = {
+      id: `cdev-${Date.now()}`,
       name: newDeviceName,
-      watts: Number(newDeviceWatts),
-      category: newDeviceCat
+      defaultWatts: Number(newDeviceWatts),
+      defaultPowerFactor: 0.85,
+      isHeavyLoad: newDeviceHeavy,
+      category: newDeviceCat,
+      notes: ''
     };
 
     const updatedDevices = [...customDevices, newItem];
     setCustomDevices(updatedDevices);
     setNewDeviceName('');
     setNewDeviceWatts('');
+    setNewDeviceHeavy(false);
 
     const updatedState: AppState = {
       ...state,
@@ -86,7 +91,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     };
     onUpdateState(updatedState);
     saveStateToStorage(updatedState);
-    setSaveSuccessMsg('নতুন ডিভাইস সফলভাবে যোগ করা হয়েছে!');
+    setSaveSuccessMsg('নতুন ডিভাইস সফলভাবে যোগ করা হয়েছে!');
     setTimeout(() => setSaveSuccessMsg(''), 3000);
   };
 
@@ -131,6 +136,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const handleResetToSampleData = () => {
     if (window.confirm('আপনি কি নিশ্চিতভাবে নমুনা ডেটা লোড করতে চান?')) {
       const sampleState: AppState = {
+        ...state,
         customers: SAMPLE_CUSTOMERS,
         projects: SAMPLE_PROJECTS,
         activeCustomerId: SAMPLE_CUSTOMERS[0].id,
@@ -141,13 +147,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       };
       onUpdateState(sampleState);
       saveStateToStorage(sampleState);
-      setImportStatusMsg({ type: 'success', msg: 'নমুনা ডেটা সফলভাবে লোড হয়েছে!' });
+      setImportStatusMsg({ type: 'success', msg: 'নমুনা ডেটা সফলভাবে লোড হয়েছে!' });
     }
   };
 
   const handleClearAllData = () => {
     if (window.confirm('সাবধান! সমস্ত ডেটা মুছে নতুন করে শুরু করতে চান?')) {
       const emptyState: AppState = {
+        ...state,
         customers: [],
         projects: [],
         activeCustomerId: null,
@@ -158,7 +165,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       };
       onUpdateState(emptyState);
       saveStateToStorage(emptyState);
-      setImportStatusMsg({ type: 'success', msg: 'সমস্ত ডেটা মুছে ফেলা হয়েছে।' });
+      setImportStatusMsg({ type: 'success', msg: 'সমস্ত ডেটা মুছে ফেলা হয়েছে।' });
     }
   };
 
@@ -172,7 +179,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <span>সেটিংস ও ডিভাইস ম্যানেজমেন্ট কন্ট্রোল</span>
         </h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          আপনার প্রফেশনাল প্রোফাইল, নিজস্ব ডিভাইস ওয়াট লিস্ট এডিট/যোগ এবং ডেটা ব্যাকআপ
+          আপনার প্রফেশনাল প্রোফাইল, নিজস্ব ডিভাইস ওয়াট লিস্ট এডিট/যোগ এবং ডেটা ব্যাকআপ
         </p>
       </div>
 
@@ -212,8 +219,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <input
                 type="text"
                 required
-                value={settings.electricianName}
-                onChange={(e) => setSettings({ ...settings, electricianName: e.target.value })}
+                value={settings.contractorName}
+                onChange={(e) => setSettings({ ...settings, contractorName: e.target.value })}
                 className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
               />
             </div>
@@ -223,8 +230,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">মোবাইল নম্বর</label>
                 <input
                   type="text"
-                  value={settings.electricianPhone}
-                  onChange={(e) => setSettings({ ...settings, electricianPhone: e.target.value })}
+                  value={settings.phone}
+                  onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
                   className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 />
               </div>
@@ -232,8 +239,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ঠিকানা</label>
                 <input
                   type="text"
-                  value={settings.electricianAddress}
-                  onChange={(e) => setSettings({ ...settings, electricianAddress: e.target.value })}
+                  value={settings.address}
+                  onChange={(e) => setSettings({ ...settings, address: e.target.value })}
                   className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 />
               </div>
@@ -245,7 +252,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setDarkMode(false)}
+                  onClick={() => {
+                    setDarkMode(false);
+                    setSettings({ ...settings, theme: 'light' });
+                  }}
                   className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 ${
                     !darkMode ? 'bg-amber-500 text-slate-950 border-amber-500' : 'bg-slate-800 text-slate-300 border-slate-700'
                   }`}
@@ -255,7 +265,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDarkMode(true)}
+                  onClick={() => {
+                    setDarkMode(true);
+                    setSettings({ ...settings, theme: 'dark' });
+                  }}
                   className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 ${
                     darkMode ? 'bg-amber-500 text-slate-950 border-amber-500' : 'bg-slate-800 text-slate-300 border-slate-700'
                   }`}
@@ -320,7 +333,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-amber-400/50 p-5 shadow-sm space-y-4">
         <h2 className="text-sm font-bold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
           <Zap className="w-4 h-4 text-amber-500" />
-          <span>কাস্টম ডিভাইস ও ওয়াট কন্ট্রোল প্যানেল (নিজের মতো যোগ ও ডিলিট করুন)</span>
+          <span>কাস্টম ডিভাইস ও ওয়াট কন্ট্রোল প্যানেল (নিজের মতো যোগ ও ডিলিট করুন)</span>
         </h2>
 
         {/* Add New Device Form */}
@@ -337,7 +350,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             />
           </div>
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">ওয়াট (Watts)</label>
+            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">ওয়াট (Watts)</label>
             <input
               type="number"
               required
@@ -373,7 +386,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <thead className="bg-slate-100 dark:bg-slate-800 text-slate-500 uppercase text-[10px]">
               <tr>
                 <th className="p-2.5">ডিভাইসের নাম</th>
-                <th className="p-2.5">ওয়াট (Watts)</th>
+                <th className="p-2.5">ওয়াট (Watts)</th>
                 <th className="p-2.5">ক্যাটাগরি</th>
                 <th className="p-2.5 text-right">অ্যাকশন</th>
               </tr>
@@ -382,7 +395,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {customDevices.map((device) => (
                 <tr key={device.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                   <td className="p-2.5 font-bold text-slate-900 dark:text-white">{device.name}</td>
-                  <td className="p-2.5 font-bold text-amber-600">{device.watts} W</td>
+                  <td className="p-2.5 font-bold text-amber-600">{device.defaultWatts} W</td>
                   <td className="p-2.5">
                     <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-[10px]">{device.category}</span>
                   </td>
