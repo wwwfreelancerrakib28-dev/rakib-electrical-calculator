@@ -54,24 +54,39 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Safe Browser & History Back Button Handler (Build Safe)
+  // Robust Mobile & Browser Back Button Handler
   useEffect(() => {
+    // Push initial history state so back button can be intercepted
+    window.history.pushState({ tab: currentTab }, '', '');
+
     const handlePopState = (event: PopStateEvent) => {
       event.preventDefault();
       if (currentTab !== 'dashboard') {
         setCurrentTab('dashboard');
-        window.history.pushState(null, '', window.location.href);
+        window.history.pushState({ tab: 'dashboard' }, '', '');
       } else {
         setExitConfirmOpen(true);
-        window.history.pushState(null, '', window.location.href);
+        window.history.pushState({ tab: 'dashboard' }, '', '');
       }
     };
 
-    window.history.pushState(null, '', window.location.href);
     window.addEventListener('popstate', handlePopState);
+
+    // Capacitor Native Android Back Button Listener via window/document event
+    const handleDocumentBackButton = (e: any) => {
+      e.preventDefault();
+      if (currentTab !== 'dashboard') {
+        setCurrentTab('dashboard');
+      } else {
+        setExitConfirmOpen(true);
+      }
+    };
+
+    document.addEventListener('backbutton', handleDocumentBackButton);
 
     return () => {
       window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('backbutton', handleDocumentBackButton);
     };
   }, [currentTab]);
 
@@ -384,20 +399,6 @@ export default function App() {
           )}
         </main>
       </div>
-
-      {/* Global Quick Action Modal */}
-      <QuickActionModal
-        isOpen={quickActionOpen}
-        onClose={() => setQuickActionOpen(false)}
-        defaultAction={quickActionType}
-        customers={state.customers}
-        projects={state.projects}
-        activeProjectId={state.activeProjectId}
-        onAddCustomer={handleAddCustomer}
-        onAddProject={handleAddProject}
-        onAddRoom={handleAddRoom}
-        onNavigateTo={setCurrentTab}
-      />
 
       {/* Exit Confirmation Modal (Yes / No) */}
       {exitConfirmOpen && (
