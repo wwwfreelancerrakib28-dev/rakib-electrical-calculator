@@ -28,6 +28,9 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
+  // App Loading / Splash Screen State for smooth startup
+  const [isLoading, setIsLoading] = useState(true);
+
   // Exit confirmation modal state for Back Button
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
 
@@ -42,6 +45,14 @@ export default function App() {
 
   // APK & Phone Install Guide Modal state
   const [apkModalOpen, setApkModalOpen] = useState(false);
+
+  // Simulate smooth background loading & splash screen duration (1.5s)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Safe Browser & History Back Button Handler (GitHub Build Safe)
   useEffect(() => {
@@ -219,6 +230,26 @@ export default function App() {
   };
 
   const totalRooms = state.projects.reduce((sum, p) => sum + p.rooms.length, 0);
+
+  // PREMIER SPLASH SCREEN (Replaces Black/Blank startup screen)
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-slate-950 flex flex-col items-center justify-center z-50 animate-in fade-in duration-300 select-none">
+        <div className="w-20 h-20 rounded-3xl bg-amber-500 text-slate-950 flex items-center justify-center font-black text-3xl shadow-2xl shadow-amber-500/50 mb-4 animate-bounce">
+          ⚡
+        </div>
+        <h1 className="text-xl font-black text-white tracking-wider text-center px-4">
+          রাকিব ইলেকট্রিক্যাল ক্যালকুলেটর
+        </h1>
+        <p className="text-xs font-bold text-amber-400 mt-1 tracking-widest uppercase">
+          Designed & Developed by Rakib
+        </p>
+        <div className="w-36 h-1.5 bg-slate-800 rounded-full overflow-hidden mt-6">
+          <div className="w-full h-full bg-amber-500 animate-pulse"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors selection:bg-amber-500 selection:text-slate-950">
